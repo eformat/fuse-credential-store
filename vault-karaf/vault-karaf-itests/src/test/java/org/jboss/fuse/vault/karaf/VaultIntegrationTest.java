@@ -39,7 +39,7 @@ import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemTimeout;
-import static org.ops4j.pax.exam.CoreOptions.vmOption;
+import static org.ops4j.pax.exam.CoreOptions.vmOptions;
 import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
@@ -48,14 +48,9 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 @RunWith(PaxExam.class)
 public class VaultIntegrationTest {
 
-    private final File tmpDir;
-
-    final String encFileDir;
-
-    final String keystoreUrl;
-
-    public VaultIntegrationTest() throws IOException {
-        tmpDir = File.createTempFile("vault-karaf-itest", "tmp");
+    @Configuration
+    public Option[] config() throws IOException {
+        final File tmpDir = File.createTempFile("vault-karaf-itest", "tmp");
         tmpDir.delete();
         tmpDir.mkdirs();
 
@@ -69,17 +64,25 @@ public class VaultIntegrationTest {
         final Path encFileVaultDatPath = Paths.get(tmpEncFileDir.getAbsolutePath(), "VAULT.dat");
         Files.copy(VaultIntegrationTest.class.getResourceAsStream("/file-enc-dir/VAULT.dat"), encFileVaultDatPath);
 
-        keystoreUrl = keyStorePath.toAbsolutePath().toString();
-        encFileDir = encFileVaultDatPath.getParent().toAbsolutePath().toString();
-    }
+        final String keystoreUrl = keyStorePath.toAbsolutePath().toString();
+        final String encFileDir = encFileVaultDatPath.getParent().toAbsolutePath().toString();
 
-    @Configuration
-    public Option[] config() {
         final MavenArtifactUrlReference karafUrl = maven().groupId("org.apache.karaf").artifactId("apache-karaf")
                 .type("zip").versionAsInProject();
 
-        final String[] vaultEnvironment = {"KEYSTORE_URL=" + keystoreUrl, "KEYSTORE_PASSWORD=MASK-EdCIIJbZZAl",
-                "KEYSTORE_ALIAS=vault", "ENC_FILE_DIR=" + encFileDir, "SALT=Mxyzptlk", "ITERATION_COUNT=50"};
+        final String[] vaultEnvironment = {
+
+                "KEYSTORE_URL=" + keystoreUrl,
+
+                "KEYSTORE_PASSWORD=MASK-EdCIIJbZZAl",
+
+                "KEYSTORE_ALIAS=vault",
+
+                "ENC_FILE_DIR=" + encFileDir,
+
+                "SALT=Mxyzptlk",
+
+                "ITERATION_COUNT=50"};
 
         return options(
 
@@ -91,7 +94,7 @@ public class VaultIntegrationTest {
 
                 features(VaultIntegrationTest.class.getResource("/feature.xml").toString(), "vault-karaf-core"),
 
-                vmOption("-Dprop=VAULT::block1::key::1"),
+                vmOptions("-Dprop=VAULT::block1::key::1", "-DVaultIntegrationTest.tmpDir=" + tmpDir.getAbsolutePath()),
 
                 mavenBundle("org.jboss.fuse.vault", "vault-karaf-core").versionAsInProject().start(),
 
@@ -103,6 +106,8 @@ public class VaultIntegrationTest {
 
     @After
     public void deleteTemporaryDirectory() throws IOException {
+        final File tmpDir = new File(System.getProperty("VaultIntegrationTest.tmpDir"));
+
         Files.walkFileTree(tmpDir.toPath(), new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) throws IOException {

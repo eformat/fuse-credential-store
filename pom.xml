@@ -18,9 +18,14 @@
   <artifactId>vault-parent</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
+
   <modules>
     <module>vault-karaf</module>
   </modules>
+
+  <properties>
+    <karaf.version>4.0.8</karaf.version>
+  </properties>
 
   <build>
     <plugins>
