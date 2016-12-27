@@ -35,17 +35,10 @@
         <configuration>
           <createDependencyReducedPom>true</createDependencyReducedPom>
           <instructions>
-            <Bundle-Name>${project.name}</Bundle-Name>
             <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-            <Export-Package>org.jboss.fuse.vault.karaf.core;version=${project.version};-noimport:=true</Export-Package>
-            <Bundle-Activator>org.jboss.fuse.vault.karaf.core.Activator</Bundle-Activator>
-            <Import-Package>javax.crypto,javax.crypto.spec,org.osgi.framework;version="[1.8,2)</Import-Package>
-            <Private-Package></Private-Package>
-            <Implementation-Title>${project.name}</Implementation-Title>
-            <Implementation-Version>${project.version}</Implementation-Version>
-            <Include-Resource>{maven-resources}</Include-Resource>
+            <Import-Package>org.osgi.framework,javax.crypto,javax.crypto.spec</Import-Package>
             <Embed-Dependency>*;scope=compile</Embed-Dependency>
-            <_failok>false</_failok>
+            <Bundle-Activator>org.jboss.fuse.vault.karaf.core.FuseVaultActivator</Bundle-Activator>
           </instructions>
         </configuration>
       </plugin>

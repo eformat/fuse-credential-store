@@ -25,14 +25,15 @@ import org.picketbox.plugins.vault.PicketBoxSecurityVault;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ActivatorTest {
+public class FuseVaultActivatorTest {
 
-    final Activator activator = new Activator();
+    final FuseVaultActivator activator = new FuseVaultActivator();
 
     @Before
     public void initialize() throws SecurityVaultException {
-        final String keyStoreUrl = ActivatorTest.class.getResource("/vault.keystore").getFile().toString();
-        final String markerPath = ActivatorTest.class.getResource("/file-enc-dir/.marker").getFile().toString();
+        final String keyStoreUrl = FuseVaultActivatorTest.class.getResource("/vault.keystore").getFile().toString();
+        final String markerPath = FuseVaultActivatorTest.class.getResource("/file-enc-dir/.marker").getFile()
+                .toString();
         final String fileEncDir = markerPath.substring(0, markerPath.length() - 7);
 
         final Map<String, Object> env = new HashMap<>();

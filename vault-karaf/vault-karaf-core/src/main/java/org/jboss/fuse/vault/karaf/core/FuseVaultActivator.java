@@ -25,7 +25,7 @@ import org.jboss.security.vault.SecurityVaultUtil;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-public final class Activator implements BundleActivator {
+public final class FuseVaultActivator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
