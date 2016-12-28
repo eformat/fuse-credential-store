@@ -15,6 +15,7 @@
  */
 package org.jboss.fuse.vault.karaf.core;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 
@@ -22,18 +23,47 @@ import org.jboss.security.vault.SecurityVault;
 import org.jboss.security.vault.SecurityVaultException;
 import org.jboss.security.vault.SecurityVaultFactory;
 import org.jboss.security.vault.SecurityVaultUtil;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class FuseVaultActivator implements BundleActivator {
 
+    private static final Logger LOG = LoggerFactory.getLogger(FuseVaultActivator.class);
+
     @Override
     public void start(final BundleContext context) throws Exception {
+        final Properties properties = System.getProperties();
+
+        @SuppressWarnings("unchecked")
+        final Collection<String> values = (Collection) properties.values();
+
+        final boolean hasValuesFromVault = values.stream().anyMatch(SecurityVaultUtil::isVaultFormat);
+
+        if (!hasValuesFromVault) {
+            return;
+        }
+
         final Map<String, Object> env = environment();
 
-        initializeVault(env);
+        try {
+            initializeVault(env);
+        } catch (final SecurityVaultException e) {
+            final String message = e.getMessage();
+            System.err.println("\r\nUnable to initialize vault, destroying container: " + message);
+            LOG.error("Unable to initialize vault, destroying container: {}", message);
 
-        final Properties properties = System.getProperties();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Logging exception stack trace", e);
+            }
+
+            final Bundle frameworkBundle = context.getBundle(0);
+            frameworkBundle.stop();
+
+            return;
+        }
 
         properties.forEach(this::replace);
     }

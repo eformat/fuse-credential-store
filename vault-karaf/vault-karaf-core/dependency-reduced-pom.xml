@@ -19,10 +19,9 @@
           <createDependencyReducedPom>true</createDependencyReducedPom>
           <instructions>
             <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-            <Import-Package>org.osgi.framework,javax.crypto,javax.crypto.spec</Import-Package>
+            <Import-Package>org.osgi.framework,org.slf4j,javax.crypto,javax.crypto.spec</Import-Package>
             <Embed-Dependency>*;scope=compile</Embed-Dependency>
             <Bundle-Activator>org.jboss.fuse.vault.karaf.core.FuseVaultActivator</Bundle-Activator>
-            <Karaf-Activator>org.jboss.fuse.vault.karaf.core.FuseVaultEarlyStartKarafActivator</Karaf-Activator>
           </instructions>
         </configuration>
       </plugin>
@@ -33,6 +32,12 @@
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
       <version>6.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.22</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
