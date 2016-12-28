@@ -2,5 +2,6 @@
 !.gitignore
 !.marker
 !.mvn
+!.travis.yml
 target
 
