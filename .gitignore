@@ -1,5 +1,6 @@
 .*
 !.gitignore
 !.marker
+!.mvn
 target
 
