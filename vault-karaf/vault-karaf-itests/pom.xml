@@ -68,7 +68,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.karaf</groupId>
-      <artifactId>apache-karaf</artifactId>
+      <artifactId>apache-karaf-minimal</artifactId>
       <version>${karaf.version}</version>
       <type>zip</type>
       <scope>test</scope>

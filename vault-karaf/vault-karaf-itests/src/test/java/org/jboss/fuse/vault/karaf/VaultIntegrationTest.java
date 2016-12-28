@@ -67,8 +67,8 @@ public class VaultIntegrationTest {
         final String keystoreUrl = keyStorePath.toAbsolutePath().toString();
         final String encFileDir = encFileVaultDatPath.getParent().toAbsolutePath().toString();
 
-        final MavenArtifactUrlReference karafUrl = maven().groupId("org.apache.karaf").artifactId("apache-karaf")
-                .type("zip").versionAsInProject();
+        final MavenArtifactUrlReference karafUrl = maven().groupId("org.apache.karaf")
+                .artifactId("apache-karaf-minimal").type("zip").versionAsInProject();
 
         final String[] vaultEnvironment = {
 
