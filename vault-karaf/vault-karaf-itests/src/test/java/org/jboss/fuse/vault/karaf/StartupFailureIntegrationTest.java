@@ -54,7 +54,7 @@ public class StartupFailureIntegrationTest {
 
                     karafDistributionConfiguration().frameworkUrl(karafUrl),
 
-                    systemTimeout(10000),
+                    systemTimeout(30000),
 
                     vmOptions("-Dprop=VAULT::block1::key::1"),
 
