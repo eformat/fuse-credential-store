@@ -30,26 +30,18 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.karaf.options.LogLevelOption;
-import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.ops4j.pax.exam.CoreOptions.environment;
-import static org.ops4j.pax.exam.CoreOptions.maven;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.systemTimeout;
 import static org.ops4j.pax.exam.CoreOptions.vmOptions;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 
 @RunWith(PaxExam.class)
-public class VaultIntegrationTest {
+public class VaultIntegrationTest extends BaseKarafTest {
 
     @Configuration
-    public Option[] config() throws IOException {
+    public Option[] configuration() throws Exception {
         final File tmpDir = File.createTempFile("vault-karaf-itest", "tmp");
         tmpDir.delete();
         tmpDir.mkdirs();
@@ -67,9 +59,6 @@ public class VaultIntegrationTest {
         final String keystoreUrl = keyStorePath.toAbsolutePath().toString();
         final String encFileDir = encFileVaultDatPath.getParent().toAbsolutePath().toString();
 
-        final MavenArtifactUrlReference karafUrl = maven().groupId("org.apache.karaf")
-                .artifactId("apache-karaf-minimal").type("zip").versionAsInProject();
-
         final String[] vaultEnvironment = {
 
                 "KEYSTORE_URL=" + keystoreUrl,
@@ -84,24 +73,13 @@ public class VaultIntegrationTest {
 
                 "ITERATION_COUNT=50"};
 
-        return options(
-
-                karafDistributionConfiguration().frameworkUrl(karafUrl),
-
-                systemTimeout(30000),
-
-                environment(vaultEnvironment),
+        return withDefault(options(environment(vaultEnvironment),
 
                 features(VaultIntegrationTest.class.getResource("/feature.xml").toString(), "vault-karaf-core"),
 
-                vmOptions("-Dprop=VAULT::block1::key::1", "-DVaultIntegrationTest.tmpDir=" + tmpDir.getAbsolutePath()),
+                vmOptions("-Dprop=VAULT::block1::key::1", "-DVaultIntegrationTest.tmpDir=" + tmpDir.getAbsolutePath())
 
-                mavenBundle("org.jboss.fuse.vault", "vault-karaf-core").versionAsInProject().start(),
-
-                wrappedBundle(mavenBundle("org.assertj", "assertj-core").versionAsInProject())
-                        .bundleSymbolicName("assertj"),
-
-                logLevel(LogLevelOption.LogLevel.INFO));
+        ));
     }
 
     @After
