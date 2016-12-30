@@ -23,14 +23,11 @@ import org.apache.karaf.shell.api.console.Session;
 import org.apache.karaf.shell.api.console.SessionFactory;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.PaxExam;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(PaxExam.class)
 public class CreateVaultIntegrationTest extends BaseKarafTest {
 
     private Session session;

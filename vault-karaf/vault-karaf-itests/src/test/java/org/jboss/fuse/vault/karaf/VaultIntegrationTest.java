@@ -26,10 +26,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.PaxExam;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.ops4j.pax.exam.CoreOptions.environment;
@@ -37,7 +35,6 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.vmOptions;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 
-@RunWith(PaxExam.class)
 public class VaultIntegrationTest extends BaseKarafTest {
 
     @Configuration

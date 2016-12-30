@@ -3,7 +3,9 @@ package org.jboss.fuse.vault.karaf;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
+import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 
@@ -16,6 +18,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 
+@RunWith(PaxExam.class)
 abstract class BaseKarafTest {
 
     public static Option[] withDefault(final Option... options) throws Exception {
