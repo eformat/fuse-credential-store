@@ -15,12 +15,24 @@
  */
 package org.jboss.fuse.vault.karaf.core;
 
-import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Proxy;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
 
 import org.jboss.security.vault.SecurityVault;
 import org.jboss.security.vault.SecurityVaultException;
@@ -29,20 +41,21 @@ import org.jboss.security.vault.SecurityVaultUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class FuseVaultActivator implements BundleActivator {
 
-    private static final String JMX_ACL_JAVA_LANG_RUNTIME = "jmx.acl.java.lang.Runtime";
-
     private static final Logger LOG = LoggerFactory.getLogger(FuseVaultActivator.class);
 
-    private static final String ROLE_SENSITIVE = "sensitive";
+    private static final String SENSITIVE_VALUE_REPLACEMENT = "<sensitive>";
+
+    private ServiceReference<MBeanServer> mbeanServerReference;
+
+    private RuntimeMXBean original;
+
+    private ObjectName runtimeBeanName;
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -76,29 +89,21 @@ public final class FuseVaultActivator implements BundleActivator {
             return;
         }
 
-        final boolean anyReplaced = properties.entrySet().stream().anyMatch(this::replace);
+        final Set<Object> replacedProperties = properties.entrySet().stream().filter(this::replace)
+                .map(Map.Entry::getKey).collect(Collectors.toSet());
 
-        if (anyReplaced) {
-            configureSensitiveRoleAccessControl(context);
+        if (!replacedProperties.isEmpty()) {
+            installFilteringRuntimeBean(context, replacedProperties);
         }
     }
 
     @Override
     public void stop(final BundleContext context) throws Exception {
-    }
-
-    private void configureSensitiveRoleAccessControl(final BundleContext context) throws IOException {
-        final ServiceReference<ConfigurationAdmin> reference = context.getServiceReference(ConfigurationAdmin.class);
-        final ConfigurationAdmin configurationAdmin = context.getService(reference);
-
-        final Configuration configuration = configurationAdmin.getConfiguration(JMX_ACL_JAVA_LANG_RUNTIME);
-
-        final Hashtable<String, Object> settings = new Hashtable<>();
-        settings.put(Constants.SERVICE_PID, JMX_ACL_JAVA_LANG_RUNTIME);
-        settings.put("getSystemProperties", ROLE_SENSITIVE);
-        settings.put("SystemProperties", ROLE_SENSITIVE);
-
-        configuration.update(settings);
+        if (original != null) {
+            final MBeanServer mbeanServer = context.getService(mbeanServerReference);
+            mbeanServer.unregisterMBean(runtimeBeanName);
+            mbeanServer.registerMBean(original, runtimeBeanName);
+        }
     }
 
     private Map<String, Object> environment() {
@@ -106,6 +111,39 @@ public final class FuseVaultActivator implements BundleActivator {
         final Map<String, Object> env = (Map) System.getenv();
 
         return env;
+    }
+
+    private void installFilteringRuntimeBean(final BundleContext context, final Set<Object> replacedProperties)
+            throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException,
+            InstanceAlreadyExistsException, NotCompliantMBeanException {
+        mbeanServerReference = context.getServiceReference(MBeanServer.class);
+        final MBeanServer mbeanServer = context.getService(mbeanServerReference);
+
+        runtimeBeanName = ObjectName.getInstance("java.lang", "type", "Runtime");
+
+        original = ManagementFactory.getRuntimeMXBean();
+
+        final Object proxy = Proxy.newProxyInstance(runtimeBeanName.getClass().getClassLoader(),
+                new Class[] {RuntimeMXBean.class}, (proxy1, method, args) -> {
+                    final Object result = method.invoke(original, args);
+
+                    if ("getSystemProperties".equals(method.getName())) {
+                        @SuppressWarnings("unchecked")
+                        final Map<Object, Object> originalValues = (Map) result;
+
+                        final Map<Object, Object> copy = new HashMap<>(originalValues);
+                        for (final Object replacedProperty : replacedProperties) {
+                            copy.put(replacedProperty, SENSITIVE_VALUE_REPLACEMENT);
+                        }
+
+                        return copy;
+                    }
+
+                    return result;
+                });
+
+        mbeanServer.unregisterMBean(runtimeBeanName);
+        mbeanServer.registerMBean(proxy, runtimeBeanName);
     }
 
     void initializeVault(final Map<String, Object> env) throws SecurityVaultException {
