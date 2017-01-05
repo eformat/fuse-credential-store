@@ -15,8 +15,11 @@
  */
 package org.jboss.fuse.vault.karaf.core;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.jboss.security.vault.SecurityVault;
@@ -26,12 +29,20 @@ import org.jboss.security.vault.SecurityVaultUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class FuseVaultActivator implements BundleActivator {
 
+    private static final String JMX_ACL_JAVA_LANG_RUNTIME = "jmx.acl.java.lang.Runtime";
+
     private static final Logger LOG = LoggerFactory.getLogger(FuseVaultActivator.class);
+
+    private static final String ROLE_SENSITIVE = "sensitive";
 
     @Override
     public void start(final BundleContext context) throws Exception {
@@ -65,11 +76,29 @@ public final class FuseVaultActivator implements BundleActivator {
             return;
         }
 
-        properties.forEach(this::replace);
+        final boolean anyReplaced = properties.entrySet().stream().anyMatch(this::replace);
+
+        if (anyReplaced) {
+            configureSensitiveRoleAccessControl(context);
+        }
     }
 
     @Override
     public void stop(final BundleContext context) throws Exception {
+    }
+
+    private void configureSensitiveRoleAccessControl(final BundleContext context) throws IOException {
+        final ServiceReference<ConfigurationAdmin> reference = context.getServiceReference(ConfigurationAdmin.class);
+        final ConfigurationAdmin configurationAdmin = context.getService(reference);
+
+        final Configuration configuration = configurationAdmin.getConfiguration(JMX_ACL_JAVA_LANG_RUNTIME);
+
+        final Hashtable<String, Object> settings = new Hashtable<>();
+        settings.put(Constants.SERVICE_PID, JMX_ACL_JAVA_LANG_RUNTIME);
+        settings.put("getSystemProperties", ROLE_SENSITIVE);
+        settings.put("SystemProperties", ROLE_SENSITIVE);
+
+        configuration.update(settings);
     }
 
     private Map<String, Object> environment() {
@@ -85,19 +114,31 @@ public final class FuseVaultActivator implements BundleActivator {
         securityVault.init(env);
     }
 
+    boolean replace(final Entry<Object, Object> entry) {
+        final String key = (String) entry.getKey();
+        final String value = (String) entry.getValue();
+
+        return replace(key, value);
+    }
+
     void replace(final Object key, final Object value) {
         replace((String) key, (String) value);
     }
 
-    void replace(final String key, final String value) {
+    boolean replace(final String key, final String value) {
+        boolean replaced = false;
+
         if (SecurityVaultUtil.isVaultFormat(value)) {
             try {
                 final char[] clear = SecurityVaultUtil.getValue(value);
 
                 System.setProperty(key, String.valueOf(clear));
+                replaced = true;
             } catch (final SecurityVaultException e) {
                 throw new IllegalArgumentException(e);
             }
         }
+
+        return replaced;
     }
 }

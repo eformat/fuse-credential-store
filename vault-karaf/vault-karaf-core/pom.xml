@@ -35,7 +35,7 @@
         <configuration>
           <instructions>
             <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-            <Import-Package>org.osgi.framework,org.slf4j,javax.crypto,javax.crypto.spec,javax.naming,org.apache.karaf.shell.api.action,org.apache.karaf.shell.api.action.lifecycle,org.apache.karaf.shell.support</Import-Package>
+            <Import-Package>org.osgi.framework,org.osgi.service.cm,org.osgi.framework.hooks.weaving,org.slf4j,javax.crypto,javax.crypto.spec,javax.naming,org.apache.karaf.shell.api.action,org.apache.karaf.shell.api.action.lifecycle,org.apache.karaf.shell.support</Import-Package>
             <Embed-Dependency>*;scope=compile</Embed-Dependency>
             <Bundle-Activator>org.jboss.fuse.vault.karaf.core.FuseVaultActivator</Bundle-Activator>
             <Karaf-Commands>org.jboss.fuse.vault.karaf.core.command</Karaf-Commands>
@@ -49,6 +49,10 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.karaf.shell</groupId>
