@@ -101,8 +101,11 @@ public final class FuseVaultActivator implements BundleActivator {
     public void stop(final BundleContext context) throws Exception {
         if (original != null) {
             final MBeanServer mbeanServer = context.getService(mbeanServerReference);
-            mbeanServer.unregisterMBean(runtimeBeanName);
-            mbeanServer.registerMBean(original, runtimeBeanName);
+
+            if (mbeanServer != null) {
+                mbeanServer.unregisterMBean(runtimeBeanName);
+                mbeanServer.registerMBean(original, runtimeBeanName);
+            }
         }
     }
 
