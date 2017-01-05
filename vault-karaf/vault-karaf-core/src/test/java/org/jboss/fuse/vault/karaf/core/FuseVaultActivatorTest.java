@@ -44,7 +44,7 @@ public class FuseVaultActivatorTest {
         env.put(PicketBoxSecurityVault.SALT, "Mxyzptlk");
         env.put(PicketBoxSecurityVault.ITERATION_COUNT, "50");
 
-        activator.initializeVault(env);
+        VaultHelper.initializeVault(env);
     }
 
     @Test

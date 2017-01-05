@@ -29,6 +29,7 @@ import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.Option;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.apache.karaf.shell.support.CommandException;
+import org.jboss.fuse.vault.karaf.core.VaultHelper;
 import org.jboss.security.plugins.PBEUtils;
 import org.jboss.security.vault.SecurityVault;
 import org.jboss.security.vault.SecurityVaultFactory;
@@ -45,7 +46,7 @@ public final class CreateVault implements Action {
     private static final String PBE_ALGORITHM = "PBEwithMD5andDES";
 
     @Option(name = "-i", aliases = {"--iterations"},
-            description = "Number of iterations to perform when masking the password", required = true,
+            description = "Number of iterations to perform when masking the password", required = false,
             multiValued = false)
     private final int iterations = 100;
 
@@ -54,7 +55,7 @@ public final class CreateVault implements Action {
     private String password;
 
     @Option(name = "-s", aliases = {"--salt"},
-            description = "Salt used for masking the vault password, 8 bytes in hexadecimal form", required = true,
+            description = "Salt used for masking the vault password, 8 printable ASCII characters", required = true,
             multiValued = false)
     private String salt;
 
@@ -102,12 +103,16 @@ public final class CreateVault implements Action {
 
         System.out.println("New vault was created in: " + vaultDirectory.getCanonicalPath());
         System.out.println("To use it specify the following environment variables:");
-        System.out.println("export KEYSTORE_URL=" + keystoreUrl);
-        System.out.println("export SALT=" + salt);
-        System.out.println("export ITERATION_COUNT=" + iterations);
-        System.out.println("export KEYSTORE_PASSWORD=" + maskedPassword);
-        System.out.println("export KEYSTORE_ALIAS=vaultkey");
-        System.out.println("export ENC_FILE_DIR=" + encryptedDirectoryUrl);
+        System.out.println("export " + PicketBoxSecurityVault.KEYSTORE_URL + "=" + keystoreUrl);
+        System.out.println("export " + PicketBoxSecurityVault.SALT + "=" + salt);
+        System.out.println("export " + PicketBoxSecurityVault.ITERATION_COUNT + "=" + iterations);
+        System.out.println("export " + PicketBoxSecurityVault.KEYSTORE_PASSWORD + "=" + maskedPassword);
+        System.out.println("export " + PicketBoxSecurityVault.KEYSTORE_ALIAS + "=vaultkey");
+        System.out.println("export " + PicketBoxSecurityVault.ENC_FILE_DIR + "=" + encryptedDirectoryUrl);
+
+        options.remove(PicketBoxSecurityVault.CREATE_KEYSTORE);
+
+        VaultHelper.initializeVault(options);
     }
 
     @Override
@@ -122,7 +127,7 @@ public final class CreateVault implements Action {
 
         if (!salt.matches("\\p{Print}{8}")) {
             throw new CommandException("Salt should be specified as 8 printable ASCII characters, given `" + salt
-                + "`. Remember to put the salt value in quotes if it starts with 0.");
+                + "`. Remember to put the salt value in quotes if it starts with 0 or contains whitespace characters");
         }
 
         createVaultIn(vaultDirectory, password, salt, iterations);

@@ -34,9 +34,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 
-import org.jboss.security.vault.SecurityVault;
 import org.jboss.security.vault.SecurityVaultException;
-import org.jboss.security.vault.SecurityVaultFactory;
 import org.jboss.security.vault.SecurityVaultUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -66,14 +64,12 @@ public final class FuseVaultActivator implements BundleActivator {
 
         final boolean hasValuesFromVault = values.stream().anyMatch(SecurityVaultUtil::isVaultFormat);
 
-        if (!hasValuesFromVault) {
+        if (!hasValuesFromVault && !VaultHelper.environmentContainsVaultConfiguration()) {
             return;
         }
 
-        final Map<String, Object> env = environment();
-
         try {
-            initializeVault(env);
+            VaultHelper.initializeVaultFromEnvironment();
         } catch (final SecurityVaultException e) {
             final String message = e.getMessage();
             System.err.println("\r\nUnable to initialize vault, destroying container: " + message);
@@ -109,13 +105,6 @@ public final class FuseVaultActivator implements BundleActivator {
         }
     }
 
-    private Map<String, Object> environment() {
-        @SuppressWarnings("unchecked")
-        final Map<String, Object> env = (Map) System.getenv();
-
-        return env;
-    }
-
     private void installFilteringRuntimeBean(final BundleContext context, final Set<Object> replacedProperties)
             throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException,
             InstanceAlreadyExistsException, NotCompliantMBeanException {
@@ -147,12 +136,6 @@ public final class FuseVaultActivator implements BundleActivator {
 
         mbeanServer.unregisterMBean(runtimeBeanName);
         mbeanServer.registerMBean(proxy, runtimeBeanName);
-    }
-
-    void initializeVault(final Map<String, Object> env) throws SecurityVaultException {
-        final SecurityVault securityVault = SecurityVaultFactory.get();
-
-        securityVault.init(env);
     }
 
     boolean replace(final Entry<Object, Object> entry) {
