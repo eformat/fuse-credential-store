@@ -1,7 +1,7 @@
 language: java
 jdk:
     - oraclejdk8
-script: ./mvnw test -U -B
+script: ./mvnw test -U
 cache:
     directories:
         - $HOME/.m2
