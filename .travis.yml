@@ -1,7 +1,9 @@
-language: java
-jdk:
-    - oraclejdk8
-script: ./mvnw test -Dsurefire.rerunFailingTestsCount=3
+sudo: false
+addons:
+  apt:
+    packages:
+        - openjdk-8-jdk
+script: ./mvnw test -B
 cache:
-    directories:
-        - $HOME/.m2
+  directories:
+    - $HOME/.m2
