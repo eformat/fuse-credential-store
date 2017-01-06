@@ -23,14 +23,13 @@ import org.apache.karaf.shell.support.table.Col;
 import org.apache.karaf.shell.support.table.ShellTable;
 import org.jboss.security.vault.SecurityVault;
 import org.jboss.security.vault.SecurityVaultFactory;
-import org.jboss.security.vault.SecurityVaultUtil;
 import org.picketbox.util.StringUtil;
+
+import static org.jboss.fuse.vault.karaf.core.VaultHelper.formatReference;
 
 @Command(scope = "vault", name = "list", description = "List the content of the vault")
 @Service
 public class ListVault implements Action {
-
-    private static final String SHARED_KEY = "1";
 
     @Override
     public Object execute() throws Exception {
@@ -46,8 +45,10 @@ public class ListVault implements Action {
 
         for (final String key : vault.keyList()) {
             final String[] blockAttribute = key.split(StringUtil.PROPERTY_DEFAULT_SEPARATOR);
-            table.addRow().addContent(blockAttribute[0], blockAttribute[1], SecurityVaultUtil.VAULT_PREFIX
-                + StringUtil.PROPERTY_DEFAULT_SEPARATOR + key + StringUtil.PROPERTY_DEFAULT_SEPARATOR + SHARED_KEY);
+            final String block = blockAttribute[0];
+            final String attributeName = blockAttribute[1];
+
+            table.addRow().addContent(block, attributeName, formatReference(block, attributeName));
         }
 
         table.print(System.out);

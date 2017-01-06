@@ -20,9 +20,17 @@ import java.util.Map;
 import org.jboss.security.vault.SecurityVault;
 import org.jboss.security.vault.SecurityVaultException;
 import org.jboss.security.vault.SecurityVaultFactory;
+import org.jboss.security.vault.SecurityVaultUtil;
 import org.picketbox.plugins.vault.PicketBoxSecurityVault;
+import org.picketbox.util.StringUtil;
 
-public class VaultHelper {
+public final class VaultHelper {
+
+    private static final String SHARED_KEY = "1";
+
+    private VaultHelper() {
+        // utility class
+    }
 
     public static boolean environmentContainsVaultConfiguration() {
         final Map<String, Object> environment = environment();
@@ -33,6 +41,12 @@ public class VaultHelper {
             && environment.containsKey(PicketBoxSecurityVault.KEYSTORE_PASSWORD)
             && environment.containsKey(PicketBoxSecurityVault.KEYSTORE_ALIAS)
             && environment.containsKey(PicketBoxSecurityVault.ENC_FILE_DIR);
+    }
+
+    public static String formatReference(final String block, final String attributeName) {
+        return SecurityVaultUtil.VAULT_PREFIX + StringUtil.PROPERTY_DEFAULT_SEPARATOR + block
+            + StringUtil.PROPERTY_DEFAULT_SEPARATOR + attributeName + StringUtil.PROPERTY_DEFAULT_SEPARATOR
+            + SHARED_KEY;
     }
 
     public static void initializeVault(final Map<String, Object> env) throws SecurityVaultException {

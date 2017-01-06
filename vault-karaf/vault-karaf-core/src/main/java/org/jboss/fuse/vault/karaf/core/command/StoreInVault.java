@@ -23,6 +23,8 @@ import org.apache.karaf.shell.support.CommandException;
 import org.jboss.security.vault.SecurityVault;
 import org.jboss.security.vault.SecurityVaultFactory;
 
+import static org.jboss.fuse.vault.karaf.core.VaultHelper.formatReference;
+
 @Command(scope = "vault", name = "store", description = "Store secret in the vault")
 @Service
 public class StoreInVault implements Action {
@@ -49,6 +51,8 @@ public class StoreInVault implements Action {
         }
 
         vault.store(vaultBlock, attributeName, attributeValue.toCharArray(), NOT_USED);
+
+        System.out.println("Value stored in vault to reference it use: " + formatReference(vaultBlock, attributeName));
 
         return null;
     }

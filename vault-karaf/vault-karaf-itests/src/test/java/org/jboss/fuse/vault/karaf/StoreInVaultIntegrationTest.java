@@ -58,6 +58,11 @@ public class StoreInVaultIntegrationTest extends BaseWithVaultSetupTest {
 
         session.execute("vault:store -a attribute1 -b block2 -x secret");
 
+        assertThat(new String(output.toByteArray()))
+                .contains("Value stored in vault to reference it use: VAULT::block2::attribute1::1");
+
+        output.reset();
+
         session.execute("vault:list");
 
         assertThat(new String(output.toByteArray())).contains("block2", "attribute1");
