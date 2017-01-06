@@ -52,6 +52,6 @@ public class ListVaultIntegrationTest extends BaseWithVaultSetupTest {
     public void shouldListVaultContentFromCommand() throws Exception {
         session.execute("vault:list");
 
-        assertThat(new String(output.toByteArray())).contains("block1", "key");
+        assertThat(new String(output.toByteArray())).contains("block1", "key", "VAULT::block1::key::1");
     }
 }

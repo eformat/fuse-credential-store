@@ -23,17 +23,21 @@ import org.apache.karaf.shell.support.table.Col;
 import org.apache.karaf.shell.support.table.ShellTable;
 import org.jboss.security.vault.SecurityVault;
 import org.jboss.security.vault.SecurityVaultFactory;
+import org.jboss.security.vault.SecurityVaultUtil;
 import org.picketbox.util.StringUtil;
 
 @Command(scope = "vault", name = "list", description = "List the content of the vault")
 @Service
 public class ListVault implements Action {
 
+    private static final String SHARED_KEY = "1";
+
     @Override
     public Object execute() throws Exception {
         final ShellTable table = new ShellTable();
         table.column(new Col("Block"));
         table.column(new Col("Attribute"));
+        table.column(new Col("Reference"));
 
         final SecurityVault vault = SecurityVaultFactory.get();
         if (!vault.isInitialized()) {
@@ -42,7 +46,8 @@ public class ListVault implements Action {
 
         for (final String key : vault.keyList()) {
             final String[] blockAttribute = key.split(StringUtil.PROPERTY_DEFAULT_SEPARATOR);
-            table.addRow().addContent((Object[]) blockAttribute);
+            table.addRow().addContent(blockAttribute[0], blockAttribute[1], SecurityVaultUtil.VAULT_PREFIX
+                + StringUtil.PROPERTY_DEFAULT_SEPARATOR + key + StringUtil.PROPERTY_DEFAULT_SEPARATOR + SHARED_KEY);
         }
 
         table.print(System.out);
