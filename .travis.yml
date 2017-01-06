@@ -1,7 +1,7 @@
 language: java
 jdk:
     - oraclejdk8
-script: ./mvnw test -U
+script: ./mvnw test -Dsurefire.rerunFailingTestsCount=3
 cache:
     directories:
         - $HOME/.m2
