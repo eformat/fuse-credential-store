@@ -54,7 +54,7 @@ public class StartupFailureIntegrationTest {
 
                     karafDistributionConfiguration().frameworkUrl(karafUrl),
 
-                    systemTimeout(30000),
+                    systemTimeout(10000),
 
                     vmOptions("-Dprop=VAULT::block1::key::1"),
 
@@ -97,7 +97,7 @@ public class StartupFailureIntegrationTest {
 
         final TestAddress address = probe.addTest(Dummy.class, "dummy", new Object[0]);
 
-        manager.storeTestMethod(address, dummy);
+        manager.storeTestMethod(address, null);
 
         reactor.addProbe(probe);
 
