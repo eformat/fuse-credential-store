@@ -60,7 +60,7 @@ public class StartupFailureIntegrationTest {
 
                     mavenBundle("org.jboss.fuse.vault", "vault-karaf-core").versionAsInProject().start(),
 
-                    logLevel(LogLevelOption.LogLevel.INFO));
+                    logLevel(LogLevelOption.LogLevel.WARN));
         }
 
         @Test

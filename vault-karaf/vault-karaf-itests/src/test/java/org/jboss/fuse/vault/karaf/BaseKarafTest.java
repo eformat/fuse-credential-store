@@ -39,7 +39,7 @@ abstract class BaseKarafTest {
                 wrappedBundle(mavenBundle("org.assertj", "assertj-core").versionAsInProject())
                         .bundleSymbolicName("assertj"),
 
-                logLevel(LogLevelOption.LogLevel.INFO)
+                logLevel(LogLevelOption.LogLevel.WARN)
 
         );
 
