@@ -1,10 +1,8 @@
 sudo: false
 dist: trusty
-addons:
-  apt:
-    packages:
-        - openjdk-8-jdk
-script: ./mvnw test -B
+script:
+  - ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+  - ./mvnw test -B
 cache:
   directories:
     - $HOME/.m2
