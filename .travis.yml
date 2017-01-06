@@ -3,6 +3,7 @@ jdk: openjdk8
 dist: trusty
 script:
   - ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+  - netstat -tunapl
   - ./mvnw test -B
 cache:
   directories:
