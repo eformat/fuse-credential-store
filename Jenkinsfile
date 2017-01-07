@@ -9,7 +9,7 @@ node('rhel') {
 
     stage 'Test'
     withEnv(["JAVA_HOME=${ tool 'openjdk8' }"]) {
-        sh './mvnw -q -B -V test'
+        sh './mvnw -q -B -V test -Dmaven.test.failure.ignore'
     }
-    junit '**/surefire-reports/*.xml'
+    step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
 }
