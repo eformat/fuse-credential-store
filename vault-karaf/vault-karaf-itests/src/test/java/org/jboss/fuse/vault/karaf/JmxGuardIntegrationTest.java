@@ -11,21 +11,29 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
 import org.junit.Test;
+import org.ops4j.net.FreePort;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
 public class JmxGuardIntegrationTest extends BaseWithVaultSetupTest {
 
+    private int jmxPort;
+
     @Configuration
     public Option[] configuration() throws Exception {
-        return withSystemProperties();
+        jmxPort = new FreePort(10000, 20000).getPort();
+
+        return withSystemProperties(editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort",
+                Integer.toString(jmxPort)));
     }
 
     @Test
     public void shouldNotAllowJmxAccessToUnauthenticatedPrincipals() throws Exception {
-        final JMXServiceURL karafViaJmx = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/karaf-root");
+        final JMXServiceURL karafViaJmx = new JMXServiceURL(
+                "service:jmx:rmi:///jndi/rmi://localhost:" + jmxPort + "/karaf-root");
 
         final Map<String, Object> environment = new HashMap<>();
         final String[] credentials = {"karaf", "karaf"};
