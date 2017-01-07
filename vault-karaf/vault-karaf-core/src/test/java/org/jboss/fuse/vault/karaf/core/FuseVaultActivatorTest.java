@@ -15,6 +15,8 @@
  */
 package org.jboss.fuse.vault.karaf.core;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,10 +32,11 @@ public class FuseVaultActivatorTest {
     final FuseVaultActivator activator = new FuseVaultActivator();
 
     @Before
-    public void initialize() throws SecurityVaultException {
-        final String keyStoreUrl = FuseVaultActivatorTest.class.getResource("/vault.keystore").getFile().toString();
-        final String markerPath = FuseVaultActivatorTest.class.getResource("/file-enc-dir/.marker").getFile()
-                .toString();
+    public void initialize() throws SecurityVaultException, UnsupportedEncodingException {
+        final String keyStoreUrl = URLDecoder
+                .decode(FuseVaultActivatorTest.class.getResource("/vault.keystore").getFile().toString(), "UTF-8");
+        final String markerPath = URLDecoder.decode(
+                FuseVaultActivatorTest.class.getResource("/file-enc-dir/.marker").getFile().toString(), "UTF-8");
         final String fileEncDir = markerPath.substring(0, markerPath.length() - 7);
 
         final Map<String, Object> env = new HashMap<>();
