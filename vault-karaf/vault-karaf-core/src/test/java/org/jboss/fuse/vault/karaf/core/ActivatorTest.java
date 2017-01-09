@@ -27,16 +27,16 @@ import org.picketbox.plugins.vault.PicketBoxSecurityVault;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class FuseVaultActivatorTest {
+public class ActivatorTest {
 
-    final FuseVaultActivator activator = new FuseVaultActivator();
+    final Activator activator = new Activator();
 
     @Before
     public void initialize() throws SecurityVaultException, UnsupportedEncodingException {
         final String keyStoreUrl = URLDecoder
-                .decode(FuseVaultActivatorTest.class.getResource("/vault.keystore").getFile().toString(), "UTF-8");
-        final String markerPath = URLDecoder.decode(
-                FuseVaultActivatorTest.class.getResource("/file-enc-dir/.marker").getFile().toString(), "UTF-8");
+                .decode(Activator.class.getResource("/vault.keystore").getFile().toString(), "UTF-8");
+        final String markerPath = URLDecoder
+                .decode(Activator.class.getResource("/file-enc-dir/.marker").getFile().toString(), "UTF-8");
         final String fileEncDir = markerPath.substring(0, markerPath.length() - 7);
 
         final Map<String, Object> env = new HashMap<>();

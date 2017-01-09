@@ -43,9 +43,9 @@ import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class FuseVaultActivator implements BundleActivator {
+public final class Activator implements BundleActivator {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FuseVaultActivator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Activator.class);
 
     private static final String SENSITIVE_VALUE_REPLACEMENT = "<sensitive>";
 
