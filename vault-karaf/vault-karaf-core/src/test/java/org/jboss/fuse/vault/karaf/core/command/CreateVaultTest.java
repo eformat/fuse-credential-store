@@ -32,13 +32,11 @@ public class CreateVaultTest {
 
     @Test
     public void shouldCreateVaults() throws Exception {
-        final CreateVault createVault = new CreateVault();
-
         final File root = temp.getRoot();
 
         final File keystoreFile = new File(root, "vault.keystore");
 
-        createVault.createVaultIn(root, "password", "saltsalt", 50);
+        CreateVault.createVaultIn(root, "password", "saltsalt", 50);
 
         assertThat(keystoreFile).exists().isFile();
         assertThat(new File(root, "VAULT.dat")).exists().isFile();

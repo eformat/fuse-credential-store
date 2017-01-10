@@ -1,3 +1,18 @@
+/**
+ *  Copyright 2005-2016 Red Hat, Inc.
+ *
+ *  Red Hat licenses this file to you under the Apache License, version
+ *  2.0 (the "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ *  implied.  See the License for the specific language governing
+ *  permissions and limitations under the License.
+ */
 package org.jboss.fuse.vault.karaf;
 
 import java.io.File;
@@ -11,8 +26,14 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
 import org.junit.After;
+import org.junit.Before;
 import org.ops4j.pax.exam.Option;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 
 import static org.ops4j.pax.exam.CoreOptions.environment;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -21,56 +42,31 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 
 public abstract class BaseWithVaultSetupTest extends BaseKarafTest {
 
-    public static Option[] withSystemProperties(final Option... additional) throws Exception {
-        final File tmpDir = File.createTempFile("vault-karaf-itest", "tmp");
-        tmpDir.delete();
-        tmpDir.mkdirs();
+    private static final File TEST_VAULT_DIRECTORY;
 
-        final File tmpEncFileDir = new File(tmpDir, "file-enc-dir");
+    static {
+        final String testVaultDirFromProperty = System.getProperty("test-vault-dir");
 
-        tmpEncFileDir.mkdir();
-
-        final Path keyStorePath = Paths.get(tmpDir.getAbsolutePath(), "vault.keystore");
-        Files.copy(VaultIntegrationTest.class.getResourceAsStream("/vault.keystore"), keyStorePath);
-
-        final Path encFileVaultDatPath = Paths.get(tmpEncFileDir.getAbsolutePath(), "VAULT.dat");
-        Files.copy(VaultIntegrationTest.class.getResourceAsStream("/file-enc-dir/VAULT.dat"), encFileVaultDatPath);
-
-        final String keystoreUrl = keyStorePath.toAbsolutePath().toString();
-        final String encFileDir = encFileVaultDatPath.getParent().toAbsolutePath().toString();
-
-        final String[] vaultEnvironment = {
-
-                "KEYSTORE_URL=" + keystoreUrl,
-
-                "KEYSTORE_PASSWORD=MASK-EdCIIJbZZAl",
-
-                "KEYSTORE_ALIAS=vault",
-
-                "ENC_FILE_DIR=" + encFileDir,
-
-                "SALT=Mxyzptlk",
-
-                "ITERATION_COUNT=50"};
-
-        final Option[] options = Stream
-                .concat(Arrays.stream(additional), Arrays.stream(options(environment(vaultEnvironment),
-
-                        features(VaultIntegrationTest.class.getResource("/feature.xml").toString(), "vault-karaf-core"),
-
-                        vmOptions("-Dprop=VAULT::block1::key::1",
-                                "-DVaultIntegrationTest.tmpDir=" + tmpDir.getAbsolutePath())
-
-                ))).toArray(Option[]::new);
-
-        return withDefault(options);
+        if (testVaultDirFromProperty != null) {
+            TEST_VAULT_DIRECTORY = new File(testVaultDirFromProperty);
+        } else {
+            try {
+                TEST_VAULT_DIRECTORY = File.createTempFile("test", "vault");
+            } catch (final IOException e) {
+                throw new ExceptionInInitializerError(e);
+            }
+        }
     }
 
-    @After
-    public void deleteTemporaryDirectory() throws IOException {
-        final File tmpDir = new File(System.getProperty("VaultIntegrationTest.tmpDir"));
+    @Inject
+    private BundleContext bundleContext;
 
-        Files.walkFileTree(tmpDir.toPath(), new SimpleFileVisitor<Path>() {
+    static void deleteTemporaryDirectory() throws IOException {
+        if (!TEST_VAULT_DIRECTORY.exists()) {
+            return;
+        }
+
+        Files.walkFileTree(TEST_VAULT_DIRECTORY.toPath(), new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) throws IOException {
                 Files.delete(dir);
@@ -85,6 +81,75 @@ public abstract class BaseWithVaultSetupTest extends BaseKarafTest {
 
         });
 
-        tmpDir.delete();
+        TEST_VAULT_DIRECTORY.delete();
+    }
+
+    @After
+    public void deleteTemporaryVaultDirectory() throws IOException {
+        deleteTemporaryDirectory();
+    }
+
+    @Before
+    public void resetVault() throws IOException, BundleException {
+        final Bundle fuseVaultBundle = findBundle("org.jboss.fuse.vault.vault-karaf-core");
+
+        fuseVaultBundle.stop();
+
+        setupVault();
+
+        fuseVaultBundle.start();
+    }
+
+    public Option[] withSystemProperties(final Option... additional) throws Exception {
+        setupVault();
+
+        final String[] vaultEnvironment = {
+
+                "KEYSTORE_URL=" + keyStorePath(),
+
+                "KEYSTORE_PASSWORD=MASK-EdCIIJbZZAl",
+
+                "KEYSTORE_ALIAS=vault",
+
+                "ENC_FILE_DIR=" + TEST_VAULT_DIRECTORY.getCanonicalPath(),
+
+                "SALT=Mxyzptlk",
+
+                "ITERATION_COUNT=50"};
+
+        final Option[] options = options(environment(vaultEnvironment),
+
+                features(VaultIntegrationTest.class.getResource("/feature.xml").toString(), "vault-karaf-core"),
+
+                vmOptions("-Dprop=VAULT::block1::key::1", "-Dtest-vault-dir=" + TEST_VAULT_DIRECTORY.getAbsolutePath())
+
+        );
+
+        return Stream.concat(Arrays.stream(withDefault(options)), Arrays.stream(additional)).toArray(Option[]::new);
+    }
+
+    private Bundle findBundle(final String symbolicName) {
+        for (final Bundle bundle : bundleContext.getBundles()) {
+            if (symbolicName.equals(bundle.getSymbolicName())) {
+                return bundle;
+            }
+        }
+
+        throw new IllegalStateException("Unable to find bundle: " + symbolicName);
+    }
+
+    private Path keyStorePath() {
+        return Paths.get(TEST_VAULT_DIRECTORY.getAbsolutePath(), "vault.keystore");
+    }
+
+    void setupVault() throws IOException {
+        deleteTemporaryDirectory();
+        TEST_VAULT_DIRECTORY.mkdirs();
+
+        Files.copy(VaultIntegrationTest.class.getResourceAsStream("/vault.keystore"), keyStorePath());
+
+        final Path vaultPath = Paths.get(TEST_VAULT_DIRECTORY.getAbsolutePath(), "VAULT.dat");
+
+        Files.copy(VaultIntegrationTest.class.getResourceAsStream("/VAULT.dat"), vaultPath);
     }
 }

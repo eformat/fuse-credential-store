@@ -39,6 +39,7 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemTimeout;
 import static org.ops4j.pax.exam.CoreOptions.vmOptions;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureConsole;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 
@@ -53,6 +54,8 @@ public class StartupFailureIntegrationTest {
             return options(
 
                     karafDistributionConfiguration().frameworkUrl(karafUrl),
+
+                    configureConsole().ignoreRemoteShell().ignoreLocalConsole(),
 
                     systemTimeout(60000),
 

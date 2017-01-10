@@ -1,3 +1,18 @@
+/**
+ *  Copyright 2005-2016 Red Hat, Inc.
+ *
+ *  Red Hat licenses this file to you under the Apache License, version
+ *  2.0 (the "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ *  implied.  See the License for the specific language governing
+ *  permissions and limitations under the License.
+ */
 package org.jboss.fuse.vault.karaf;
 
 import java.lang.management.ManagementFactory;
@@ -11,29 +26,25 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
 import org.junit.Test;
-import org.ops4j.net.FreePort;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
 public class JmxGuardIntegrationTest extends BaseWithVaultSetupTest {
 
-    private int jmxPort;
+    private final String jmxPort = System.getProperty("test-jmx-port");
 
     @Configuration
     public Option[] configuration() throws Exception {
-        jmxPort = new FreePort(10000, 20000).getPort();
-
-        return withSystemProperties(editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort",
-                Integer.toString(jmxPort)));
+        return withSystemProperties();
     }
 
     @Test
     public void shouldNotAllowJmxAccessToUnauthenticatedPrincipals() throws Exception {
-        final JMXServiceURL karafViaJmx = new JMXServiceURL(
-                "service:jmx:rmi:///jndi/rmi://localhost:" + jmxPort + "/karaf-root");
+        final String jmxUrl = "service:jmx:rmi:///jndi/rmi://localhost:" + jmxPort + "/karaf-root";
+
+        final JMXServiceURL karafViaJmx = new JMXServiceURL(jmxUrl);
 
         final Map<String, Object> environment = new HashMap<>();
         final String[] credentials = {"karaf", "karaf"};

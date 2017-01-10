@@ -52,12 +52,12 @@ public class ActivatorTest {
 
     @Test
     public void shouldNotReplaceSystemPropertiesNotInVaultFormat() {
-        activator.replace("key", "value");
+        assertThat(activator.replaced("key", "value")).isFalse();
     }
 
     @Test
     public void shouldReplaceSystemPropertiesInVaultFormat() {
-        activator.replace("key", "VAULT::block1::key::1");
+        assertThat(activator.replaced("key", "VAULT::block1::key::1")).isTrue();
 
         assertThat(System.getProperty("key")).isEqualTo("this is a password");
     }

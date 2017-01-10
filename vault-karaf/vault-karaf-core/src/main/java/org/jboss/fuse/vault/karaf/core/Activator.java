@@ -20,20 +20,16 @@ import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistrationException;
+import javax.management.JMException;
 import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 
+import org.jboss.security.vault.SecurityVault;
 import org.jboss.security.vault.SecurityVaultException;
 import org.jboss.security.vault.SecurityVaultUtil;
 import org.osgi.framework.Bundle;
@@ -42,6 +38,8 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.jboss.fuse.vault.karaf.core.VaultHelper.unloadVault;
 
 public final class Activator implements BundleActivator {
 
@@ -52,6 +50,8 @@ public final class Activator implements BundleActivator {
     private ServiceReference<MBeanServer> mbeanServerReference;
 
     private RuntimeMXBean original;
+
+    private final Map<String, String> replacedProperties = new HashMap<>();
 
     private ObjectName runtimeBeanName;
 
@@ -85,11 +85,20 @@ public final class Activator implements BundleActivator {
             return;
         }
 
-        final Set<Object> replacedProperties = properties.entrySet().stream().filter(this::replace)
-                .map(Map.Entry::getKey).collect(Collectors.toSet());
+        @SuppressWarnings("unchecked")
+        final Hashtable<String, String> propertiesAsStringEntries = (Hashtable) properties;
+
+        for (final Entry<String, String> property : propertiesAsStringEntries.entrySet()) {
+            final String key = property.getKey();
+            final String value = property.getValue();
+
+            if (replaced(key, value)) {
+                replacedProperties.put(key, value);
+            }
+        }
 
         if (!replacedProperties.isEmpty()) {
-            installFilteringRuntimeBean(context, replacedProperties);
+            installFilteringRuntimeBean(context);
         }
     }
 
@@ -103,11 +112,17 @@ public final class Activator implements BundleActivator {
                 mbeanServer.registerMBean(original, runtimeBeanName);
             }
         }
+
+        unloadVault();
+
+        if (!replacedProperties.isEmpty()) {
+            // restore original value references
+            replacedProperties.forEach((k, v) -> System.setProperty(k, v));
+            replacedProperties.clear();
+        }
     }
 
-    private void installFilteringRuntimeBean(final BundleContext context, final Set<Object> replacedProperties)
-            throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException,
-            InstanceAlreadyExistsException, NotCompliantMBeanException {
+    private void installFilteringRuntimeBean(final BundleContext context) throws JMException {
         mbeanServerReference = context.getServiceReference(MBeanServer.class);
         final MBeanServer mbeanServer = context.getService(mbeanServerReference);
 
@@ -124,7 +139,7 @@ public final class Activator implements BundleActivator {
                         final Map<Object, Object> originalValues = (Map) result;
 
                         final Map<Object, Object> copy = new HashMap<>(originalValues);
-                        for (final Object replacedProperty : replacedProperties) {
+                        for (final String replacedProperty : replacedProperties.keySet()) {
                             copy.put(replacedProperty, SENSITIVE_VALUE_REPLACEMENT);
                         }
 
@@ -138,23 +153,20 @@ public final class Activator implements BundleActivator {
         mbeanServer.registerMBean(proxy, runtimeBeanName);
     }
 
-    boolean replace(final Entry<Object, Object> entry) {
-        final String key = (String) entry.getKey();
-        final String value = (String) entry.getValue();
-
-        return replace(key, value);
-    }
-
-    void replace(final Object key, final Object value) {
-        replace((String) key, (String) value);
-    }
-
-    boolean replace(final String key, final String value) {
+    boolean replaced(final String key, final String value) {
         boolean replaced = false;
 
         if (SecurityVaultUtil.isVaultFormat(value)) {
+            final SecurityVault securityVault = VaultHelper.currentVault().get();
+
             try {
-                final char[] clear = SecurityVaultUtil.getValue(value);
+                final String[] parts = value.split("::");
+
+                final String block = parts[1];
+
+                final String attribute = parts[2];
+
+                final char[] clear = securityVault.retrieve(block, attribute, null);
 
                 System.setProperty(key, String.valueOf(clear));
                 replaced = true;

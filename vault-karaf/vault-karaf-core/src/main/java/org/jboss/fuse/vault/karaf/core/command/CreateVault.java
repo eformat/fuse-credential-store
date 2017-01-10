@@ -16,8 +16,10 @@
 package org.jboss.fuse.vault.karaf.core.command;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -31,13 +33,13 @@ import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.apache.karaf.shell.support.CommandException;
 import org.jboss.fuse.vault.karaf.core.VaultHelper;
 import org.jboss.security.plugins.PBEUtils;
-import org.jboss.security.vault.SecurityVault;
-import org.jboss.security.vault.SecurityVaultFactory;
 import org.picketbox.plugins.vault.PicketBoxSecurityVault;
 
 @Command(scope = "vault", name = "create", description = "Create vault")
 @Service
 public final class CreateVault implements Action {
+
+    private static final int DEFAULT_ITERATIONS = 100;
 
     private static final char[] INITIAL_PASSWORD = "somearbitrarycrazystringthatdoesnotmatter".toCharArray();
 
@@ -47,8 +49,8 @@ public final class CreateVault implements Action {
 
     @Option(name = "-i", aliases = {"--iterations"},
             description = "Number of iterations to perform when masking the password", required = false,
-            multiValued = false)
-    private final int iterations = 100;
+            multiValued = false, valueToShowInHelp = "100")
+    private Integer iterations;
 
     @Option(name = "-p", aliases = {"--password"}, description = "Clear text password for the vault", required = true,
             multiValued = false)
@@ -63,24 +65,8 @@ public final class CreateVault implements Action {
             required = true, multiValued = false)
     private String vaultPath;
 
-    static String mask(final String passwd, final String salt, final int iterations) throws Exception {
-        final SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE_ALGORITHM);
-
-        final PBEParameterSpec cipherSpec = new PBEParameterSpec(salt.getBytes(), iterations);
-
-        final PBEKeySpec keySpec = new PBEKeySpec(INITIAL_PASSWORD);
-
-        final SecretKey cipherKey = factory.generateSecret(keySpec);
-
-        final String maskedPass = PBEUtils.encode64(passwd.getBytes(), PBE_ALGORITHM, cipherKey, cipherSpec);
-
-        return PicketBoxSecurityVault.PASS_MASK_PREFIX + maskedPass;
-    }
-
-    public void createVaultIn(final File vaultDirectory, final String password, final String salt, final int iterations)
+    static void createVaultIn(final File vaultDirectory, final String password, final String salt, final int iterations)
             throws Exception {
-        final SecurityVault securityVault = SecurityVaultFactory.get();
-
         final Map<String, Object> options = new HashMap<>();
         final String keystoreUrl = new File(vaultDirectory, KEYSTORE_FILENAME).getAbsolutePath();
         options.put(PicketBoxSecurityVault.KEYSTORE_URL, keystoreUrl);
@@ -99,7 +85,7 @@ public final class CreateVault implements Action {
         final String encryptedDirectoryUrl = vaultDirectory.getAbsolutePath();
         options.put(PicketBoxSecurityVault.ENC_FILE_DIR, encryptedDirectoryUrl);
 
-        securityVault.init(options);
+        VaultHelper.initializeVault(options);
 
         System.out.println("New vault was created in: " + vaultDirectory.getCanonicalPath());
         System.out.println("To use it specify the following environment variables:");
@@ -109,20 +95,35 @@ public final class CreateVault implements Action {
         System.out.println("export " + PicketBoxSecurityVault.KEYSTORE_PASSWORD + "=" + maskedPassword);
         System.out.println("export " + PicketBoxSecurityVault.KEYSTORE_ALIAS + "=vaultkey");
         System.out.println("export " + PicketBoxSecurityVault.ENC_FILE_DIR + "=" + encryptedDirectoryUrl);
+    }
 
-        options.remove(PicketBoxSecurityVault.CREATE_KEYSTORE);
+    static String mask(final String passwd, final String salt, final int iterations) throws Exception {
+        final SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE_ALGORITHM);
 
-        VaultHelper.initializeVault(options);
+        final byte[] saltBytes = salt.getBytes(StandardCharsets.UTF_8);
+        final PBEParameterSpec cipherSpec = new PBEParameterSpec(saltBytes, iterations);
+
+        final PBEKeySpec keySpec = new PBEKeySpec(INITIAL_PASSWORD);
+
+        final SecretKey cipherKey = factory.generateSecret(keySpec);
+
+        final byte[] passwordBytes = passwd.getBytes(StandardCharsets.UTF_8);
+        final String maskedPass = PBEUtils.encode64(passwordBytes, PBE_ALGORITHM, cipherKey, cipherSpec);
+
+        return PicketBoxSecurityVault.PASS_MASK_PREFIX + maskedPass;
     }
 
     @Override
     public Object execute() throws Exception {
         final File vaultDirectory = new File(vaultPath);
-        vaultDirectory.mkdirs();
+        if (!vaultDirectory.mkdirs()) {
+            throw new CommandException("Unable to create vault directory in path: `" + vaultDirectory.getCanonicalPath()
+                + "`. Check the path and file system permissions.");
+        }
 
         if (!vaultDirectory.exists() || !vaultDirectory.isDirectory()) {
-            throw new CommandException("Path: " + vaultDirectory.getCanonicalPath()
-                + " is not a directory. Check the path and file system permissions.");
+            throw new CommandException("Path: `" + vaultDirectory.getCanonicalPath()
+                + "` is not a directory. Check the path and file system permissions.");
         }
 
         if (!salt.matches("\\p{Print}{8}")) {
@@ -130,7 +131,8 @@ public final class CreateVault implements Action {
                 + "`. Remember to put the salt value in quotes if it starts with 0 or contains whitespace characters");
         }
 
-        createVaultIn(vaultDirectory, password, salt, iterations);
+        final int iterationCount = Optional.ofNullable(iterations).orElse(DEFAULT_ITERATIONS);
+        createVaultIn(vaultDirectory, password, salt, iterationCount);
 
         return null;
     }

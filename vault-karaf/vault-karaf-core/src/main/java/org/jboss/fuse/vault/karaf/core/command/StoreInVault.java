@@ -19,11 +19,10 @@ import org.apache.karaf.shell.api.action.Action;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.Option;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
-import org.apache.karaf.shell.support.CommandException;
 import org.jboss.security.vault.SecurityVault;
-import org.jboss.security.vault.SecurityVaultFactory;
 
 import static org.jboss.fuse.vault.karaf.core.VaultHelper.formatReference;
+import static org.jboss.fuse.vault.karaf.core.VaultHelper.mandatoryVault;
 
 @Command(scope = "vault", name = "store", description = "Store secret in the vault")
 @Service
@@ -45,10 +44,7 @@ public class StoreInVault implements Action {
 
     @Override
     public Object execute() throws Exception {
-        final SecurityVault vault = SecurityVaultFactory.get();
-        if (!vault.isInitialized()) {
-            throw new CommandException("The vault is not initialized");
-        }
+        final SecurityVault vault = mandatoryVault();
 
         vault.store(vaultBlock, attributeName, attributeValue.toCharArray(), NOT_USED);
 

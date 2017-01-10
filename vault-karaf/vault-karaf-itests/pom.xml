@@ -39,6 +39,33 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <configuration>
+              <ignoredUnusedDeclaredDependencies>
+                <ignoredUnusedDeclaredDependency>org.jboss.fuse.vault:vault-karaf-core</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>ch.qos.logback:logback-classic</ignoredUnusedDeclaredDependency>
+              </ignoredUnusedDeclaredDependencies>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.basepom.maven</groupId>
+        <artifactId>duplicate-finder-maven-plugin</artifactId>
+        <configuration>
+          <skip>true</skip> <!-- This is an integration test project and PAX dependencies contain duplicate classes -->
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkCount>1</forkCount>
+          <forkedProcessTimeoutInSeconds>120</forkedProcessTimeoutInSeconds>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -47,7 +74,6 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>vault-karaf-core</artifactId>
       <version>${project.version}</version>
-      <type>bundle</type>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
@@ -80,11 +106,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.karaf</groupId>
-      <artifactId>org.apache.karaf.main</artifactId>
-      <version>${karaf.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.karaf.shell</groupId>
       <artifactId>org.apache.karaf.shell.core</artifactId>
       <version>${karaf.version}</version>
@@ -104,6 +125,12 @@
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam</artifactId>
+      <version>${pax-exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-spi</artifactId>
       <version>${pax-exam.version}</version>
       <scope>test</scope>
     </dependency>

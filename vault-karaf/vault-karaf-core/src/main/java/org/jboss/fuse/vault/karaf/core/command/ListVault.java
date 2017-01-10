@@ -18,14 +18,13 @@ package org.jboss.fuse.vault.karaf.core.command;
 import org.apache.karaf.shell.api.action.Action;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
-import org.apache.karaf.shell.support.CommandException;
 import org.apache.karaf.shell.support.table.Col;
 import org.apache.karaf.shell.support.table.ShellTable;
 import org.jboss.security.vault.SecurityVault;
-import org.jboss.security.vault.SecurityVaultFactory;
 import org.picketbox.util.StringUtil;
 
 import static org.jboss.fuse.vault.karaf.core.VaultHelper.formatReference;
+import static org.jboss.fuse.vault.karaf.core.VaultHelper.mandatoryVault;
 
 @Command(scope = "vault", name = "list", description = "List the content of the vault")
 @Service
@@ -38,10 +37,7 @@ public class ListVault implements Action {
         table.column(new Col("Attribute"));
         table.column(new Col("Reference"));
 
-        final SecurityVault vault = SecurityVaultFactory.get();
-        if (!vault.isInitialized()) {
-            throw new CommandException("The vault is not initialized");
-        }
+        final SecurityVault vault = mandatoryVault();
 
         for (final String key : vault.keyList()) {
             final String[] blockAttribute = key.split(StringUtil.PROPERTY_DEFAULT_SEPARATOR);

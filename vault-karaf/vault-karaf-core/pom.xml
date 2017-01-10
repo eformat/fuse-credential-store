@@ -36,11 +36,34 @@
           <instructions>
             <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
             <Import-Package>org.osgi.framework,org.osgi.service.cm,org.osgi.framework.hooks.weaving,org.slf4j,javax.crypto,javax.crypto.spec,javax.naming,javax.management,org.apache.karaf.shell.api.action,org.apache.karaf.shell.api.action.lifecycle,org.apache.karaf.shell.support,org.apache.karaf.shell.support.table</Import-Package>
+            <Export-Package>!*</Export-Package>
             <Embed-Dependency>*;scope=compile</Embed-Dependency>
             <Bundle-Activator>org.jboss.fuse.vault.karaf.core.Activator</Bundle-Activator>
             <Karaf-Commands>org.jboss.fuse.vault.karaf.core.command</Karaf-Commands>
           </instructions>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries combine.self="override">
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <configuration>
+              <ignoredUnusedDeclaredDependencies>
+                <ignoredUnusedDeclaredDependency>org.picketbox:common-spi</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>org.jboss.logging:jboss-logging</ignoredUnusedDeclaredDependency>
+              </ignoredUnusedDeclaredDependencies>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -56,7 +79,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.karaf.shell</groupId>
-      <artifactId>org.apache.karaf.shell.console</artifactId>
+      <artifactId>org.apache.karaf.shell.core</artifactId>
       <version>${karaf.version}</version>
       <scope>provided</scope>
     </dependency>

@@ -16,20 +16,27 @@
 package org.jboss.fuse.vault.karaf.core;
 
 import java.util.Map;
+import java.util.Optional;
 
+import org.apache.karaf.shell.support.CommandException;
 import org.jboss.security.vault.SecurityVault;
 import org.jboss.security.vault.SecurityVaultException;
-import org.jboss.security.vault.SecurityVaultFactory;
 import org.jboss.security.vault.SecurityVaultUtil;
 import org.picketbox.plugins.vault.PicketBoxSecurityVault;
 import org.picketbox.util.StringUtil;
 
 public final class VaultHelper {
 
+    private static SecurityVault CURRENT_VAULT;
+
     private static final String SHARED_KEY = "1";
 
     private VaultHelper() {
         // utility class
+    }
+
+    public static Optional<SecurityVault> currentVault() {
+        return Optional.ofNullable(CURRENT_VAULT);
     }
 
     public static boolean environmentContainsVaultConfiguration() {
@@ -50,13 +57,27 @@ public final class VaultHelper {
     }
 
     public static void initializeVault(final Map<String, Object> env) throws SecurityVaultException {
-        final SecurityVault securityVault = SecurityVaultFactory.get();
+        final SecurityVault securityVault = instantiateVault();
 
         securityVault.init(env);
+
+        CURRENT_VAULT = securityVault;
     }
 
     public static void initializeVaultFromEnvironment() throws SecurityVaultException {
         initializeVault(environment());
+    }
+
+    public static SecurityVault mandatoryVault() throws CommandException {
+        if ((CURRENT_VAULT == null) || !CURRENT_VAULT.isInitialized()) {
+            throw new CommandException("The vault is not initialized");
+        }
+
+        return CURRENT_VAULT;
+    }
+
+    public static void unloadVault() {
+        CURRENT_VAULT = null;
     }
 
     private static Map<String, Object> environment() {
@@ -64,5 +85,9 @@ public final class VaultHelper {
         final Map<String, Object> env = (Map) System.getenv();
 
         return env;
+    }
+
+    private static SecurityVault instantiateVault() {
+        return new PicketBoxSecurityVault();
     }
 }
