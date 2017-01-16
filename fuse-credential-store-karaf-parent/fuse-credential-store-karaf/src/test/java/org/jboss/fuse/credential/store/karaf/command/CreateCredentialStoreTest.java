@@ -47,7 +47,7 @@ public class CreateCredentialStoreTest {
     @Test
     public void shouldCreateCredentialSource() throws Exception {
         final Map<String, String> configuration = CreateCredentialStore.createCredentialSourceConfiguration(
-                ProtectionType.masked_password,
+                ProtectionType.masked,
                 Collections.singletonList("password=The quick brown fox jumped over the lazy dog"));
 
         assertThat(configuration).containsKeys("CREDENTIAL_STORE_PROTECTION_PARAMS", "CREDENTIAL_STORE_PROTECTION");

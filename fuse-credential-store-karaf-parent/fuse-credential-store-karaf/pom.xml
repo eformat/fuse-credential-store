@@ -48,7 +48,9 @@
               org.osgi.service.cm,
               org.apache.karaf.shell.api.action,
               org.apache.karaf.shell.api.action.lifecycle,
+              org.apache.karaf.shell.api.console,
               org.apache.karaf.shell.support,
+              org.apache.karaf.shell.support.completers,
               org.apache.karaf.shell.support.table,
               org.slf4j
             </Import-Package>

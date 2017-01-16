@@ -23,7 +23,7 @@ public final class Defaults {
 
     public static final String CREDENTIAL_STORE_ALGORITHM = KeyStoreCredentialStore.KEY_STORE_CREDENTIAL_STORE;
 
-    public static final ProtectionType CREDENTIAL_TYPE = ProtectionType.masked_password;
+    public static final ProtectionType CREDENTIAL_TYPE = ProtectionType.masked;
 
     public static final String PROVIDER = ProviderHelper.WILDFLY_PROVIDER;
 

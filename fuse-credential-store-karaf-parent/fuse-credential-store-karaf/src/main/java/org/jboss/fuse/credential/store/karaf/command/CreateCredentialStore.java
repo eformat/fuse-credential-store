@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import org.apache.karaf.shell.api.action.Action;
 import org.apache.karaf.shell.api.action.Command;
+import org.apache.karaf.shell.api.action.Completion;
 import org.apache.karaf.shell.api.action.Option;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.apache.karaf.shell.support.CommandException;
@@ -48,6 +49,7 @@ public final class CreateCredentialStore implements Action {
     @Option(name = "-k", aliases = {"--protection-attributes"},
             description = "Credential store protection attributes, used to configure the credential protection",
             multiValued = true)
+    @Completion(caseSensitive = true, value = CredentialStoreProtectionCompletionSupport.class)
     List<String> credentialAttributes = Collections.emptyList();
 
     @Option(name = "-p", aliases = {"--protection-type"}, description = "Credential store protection type",

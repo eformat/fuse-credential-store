@@ -23,7 +23,7 @@ import org.wildfly.security.credential.source.CredentialSource;
 
 public enum ProtectionType {
 
-    masked_password(new MaskedPasswordHelper());
+    masked(new MaskedPasswordHelper());
 
     interface CredentialSourceHandler {
         String CREDENTIAL_STORE_PROTECTION = "CREDENTIAL_STORE_PROTECTION";
@@ -39,6 +39,10 @@ public enum ProtectionType {
 
         CredentialSource createCredentialSource(final Map<String, String> configuration)
                 throws GeneralSecurityException, IOException;
+
+        String[] getOptionValuesFor(String option);
+
+        String[] getSupportedOptions();
     }
 
     private final CredentialSourceHandler handler;
@@ -56,6 +60,14 @@ public enum ProtectionType {
     public CredentialSource createCredentialSource(final Map<String, String> configuration)
             throws GeneralSecurityException, IOException {
         return handler.createCredentialSource(configuration);
+    }
+
+    public String[] getOptionValuesFor(final String option) {
+        return handler.getOptionValuesFor(option);
+    }
+
+    public String[] getSupportedOptions() {
+        return handler.getSupportedOptions();
     }
 
 }

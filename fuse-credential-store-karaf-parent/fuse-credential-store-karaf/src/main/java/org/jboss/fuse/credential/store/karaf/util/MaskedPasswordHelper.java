@@ -19,7 +19,9 @@ import java.io.IOException;
 import java.security.AlgorithmParameters;
 import java.security.GeneralSecurityException;
 import java.security.Provider;
+import java.security.Security;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.Base64.Encoder;
@@ -47,6 +49,18 @@ import org.wildfly.security.password.spec.MaskedPasswordSpec;
 final class MaskedPasswordHelper implements CredentialSourceHandler {
 
     private static final String DEFAULT_ALGORITHM = MaskedPassword.ALGORITHM_MASKED_HMAC_SHA512_AES_256;
+
+    private static final String[] OPTIONS = {"provider", "algorithm", "password", "salt", "iterations"};
+
+    private final String[] supportedMaskedAlgorithms;
+
+    public MaskedPasswordHelper() {
+        final String passwordFactoryType = PasswordFactory.class.getSimpleName();
+
+        supportedMaskedAlgorithms = Arrays.stream(Security.getProviders()).flatMap(p -> p.getServices().stream())
+                .filter(s -> passwordFactoryType.equals(s.getType())).map(s -> s.getAlgorithm())
+                .filter(a -> a.startsWith("masked-")).toArray(String[]::new);
+    }
 
     @Override
     public Map<String, String> createConfiguration(final Map<String, String> attributes)
@@ -141,6 +155,23 @@ final class MaskedPasswordHelper implements CredentialSourceHandler {
         final PasswordCredential passwordCredential = new PasswordCredential(password);
 
         return IdentityCredentials.NONE.withCredential(passwordCredential);
+    }
+
+    @Override
+    public String[] getOptionValuesFor(final String option) {
+        switch (option) {
+            case "provider":
+                return Arrays.stream(Security.getProviders()).map(p -> p.getName()).toArray(String[]::new);
+            case "algorithm":
+                return supportedMaskedAlgorithms;
+        }
+
+        return new String[0];
+    }
+
+    @Override
+    public String[] getSupportedOptions() {
+        return OPTIONS.clone();
     }
 
     private String option(final Map<String, String> attributes, final String key, final String defaultValue) {

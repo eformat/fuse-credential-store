@@ -47,7 +47,7 @@ public class ProtectionTypeTest {
                 "MDkEKXNvbWVhcmJpdHJhcnljcmF6eXN0cmluZ3RoYXRkb2Vzbm90bWF0dGVyAgID6AQIHmrp8uDnGLE=");
         configuration.put("CREDENTIAL_STORE_PROTECTION", "mC/60tWnla4bmFn2e5Z8U3CZnjsG9Pvc");
 
-        final CredentialSource credentialSource = ProtectionType.masked_password.createCredentialSource(configuration);
+        final CredentialSource credentialSource = ProtectionType.masked.createCredentialSource(configuration);
 
         assertThat(credentialSource).isNotNull();
 
@@ -70,7 +70,7 @@ public class ProtectionTypeTest {
         attributes.put("password", "my deep dark secret");
         attributes.put("algorithm", MaskedPassword.ALGORITHM_MASKED_MD5_DES);
 
-        final Map<String, String> configuration = ProtectionType.masked_password.createConfiguration(attributes);
+        final Map<String, String> configuration = ProtectionType.masked.createConfiguration(attributes);
 
         assertThat(configuration).containsOnlyKeys(CredentialSourceHandler.CREDENTIAL_STORE_PROTECTION_ALGORITHM,
                 CredentialSourceHandler.CREDENTIAL_STORE_PROTECTION,
@@ -83,7 +83,7 @@ public class ProtectionTypeTest {
         final Map<String, String> attributes = new HashMap<>();
         attributes.put("password", "my deep dark secret");
 
-        final Map<String, String> configuration = ProtectionType.masked_password.createConfiguration(attributes);
+        final Map<String, String> configuration = ProtectionType.masked.createConfiguration(attributes);
 
         assertThat(configuration).containsOnlyKeys(CredentialSourceHandler.CREDENTIAL_STORE_PROTECTION,
                 CredentialSourceHandler.CREDENTIAL_STORE_PROTECTION_PARAMS);
