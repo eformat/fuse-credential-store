@@ -1,36 +1,35 @@
-Fuse Vault
-==========
+Fuse Credential Store
+=====================
 
-Provides a facility to include passwords and other sensitive strings as masked strings that are resolved from an
-encrypted vault.
+Provides a facility to include passwords and other sensitive strings as masked strings that are resolved from an Wildfly
+Elytron Credential store.
 
 The built-in support is for OSGI environment, specifically for Apache Karaf, and for Java system properties.
 
 You might have specified passwords, for instance `javax.net.ssl.keyStorePassword`, as system properties in clear
-text this project allows you to specify these values as references to an encrypted vault.
+text this project allows you to specify these values as references to a credential store.
 
-With the Fuse Vault installed you can specify those sensitive strings as references to a value stored in encrypted
-vault, so the clear text value now becomes `VAULT::block1::key::1` referencing the `block1` of the vault and the
-value stored under the `key` attribute name there, the `1` at the end is the shared key not currently used in the 
-underlying implementation.
+With the Fuse Credential Store installed you can specify those sensitive strings as references to a value stored in
+Credential Store, so instead of the clear text value you use an alias reference, for instance `CS:alias` referencing
+the value stored under the `alias` in a configured Credential Store.
 
-Getting started
----------------
+Getting started on Karaf
+------------------------
 
-First you need to build and install the `vault-karaf-core` to your local Maven repository by runing:
+First you need to build and install the `fuse-credential-store-karaf` to your local Maven repository by runing:
 
     $ ./mvnw
 
 from this directory.
 
-Next, if you do are adding the vault support to a new Karaf download and extract
+Next, if you do are adding the credential store support to a new Karaf download and extract
 [Apache Karaf distribution](http://karaf.apache.org/download.html).
 
     $ curl -O http://www.apache.org/dyn/closer.lua/karaf/4.0.8/apache-karaf-4.0.8.tar.gz
     $ tar xf apache-karaf-4.0.8.tar.gz
 
 Change into `apache-karaf-4.0.8` directory and run the `bin/karaf` to startup the container, and then install the
-Fuse Vault bundle.
+Fuse Credential Store bundle.
 
     $ cd apache-karaf-4.0.8
     $ bin/karaf
@@ -46,58 +45,58 @@ Fuse Vault bundle.
     and '[cmd] --help' for help on a specific command.
     Hit '<ctrl-d>' or type 'system:shutdown' or 'logout' to shutdown Karaf.
     
-    karaf@root()> bundle:install -s mvn:org.jboss.fuse.vault/vault-karaf-core/0.0.1-SNAPSHOT
+    karaf@root()> bundle:install -s mvn:org.jboss.fuse.credential.store/fuse-credential-store-karaf/0.0.1-SNAPSHOT
 
-Next create a vault using `vault:create`:
+Next create a credential store using `credential-store:create`:
 
-    karaf@root()> vault:create -s Mxyzptlk -p 'my very secret password' -v my-vault
-    New vault was created in: .../apache-karaf-4.0.8/my-vault
-    To use it specify the following environment variables:
-    export KEYSTORE_URL=.../apache-karaf-4.0.8/my-vault/vault.keystore
-    export SALT=Mxyzptlk
-    export ITERATION_COUNT=100
-    export KEYSTORE_PASSWORD=MASK-MfBSNdHBps/o9PcViobYMdruEtF1nlMJ
-    export KEYSTORE_ALIAS=vaultkey
-    export ENC_FILE_DIR=.../apache-karaf-4.0.8/my-vault
+    karaf@root()> credential-store:create -a location=credential.store -k password="my password" -k algorithm=masked-MD5-DES
+    In order to use this credential store set the following environment variables
+    Variable                              | Value
+    ------------------------------------------------------------------------------------------------------------------------
+    CREDENTIAL_STORE_PROTECTION_ALGORITHM | masked-MD5-DES
+    CREDENTIAL_STORE_PROTECTION_PARAMS    | MDkEKXNvbWVhcmJpdHJhcnljcmF6eXN0cmluZ3RoYXRkb2Vzbm90bWF0dGVyAgID6AQIsUOEqvog6XI=
+    CREDENTIAL_STORE_PROTECTION           | Sf6sYy7gNpygs311zcQh8Q==
+    CREDENTIAL_STORE_ATTR_location        | credential.store
+    Or simply use this:
+    export CREDENTIAL_STORE_PROTECTION_ALGORITHM=masked-MD5-DES
+    export CREDENTIAL_STORE_PROTECTION_PARAMS=MDkEKXNvbWVhcmJpdHJhcnljcmF6eXN0cmluZ3RoYXRkb2Vzbm90bWF0dGVyAgID6AQIsUOEqvog6XI=
+    export CREDENTIAL_STORE_PROTECTION=Sf6sYy7gNpygs311zcQh8Q==
+    export CREDENTIAL_STORE_ATTR_location=credential.store
 
-This should have created `my-vault` directory with two files in it JCEKS KeyStore containing the secret key, and the 
-encrypted vault file holding all the secret strings.
-
-    $ tree my-vault/
-    my-vault/
-    ├── VAULT.dat
-    └── vault.keystore
-    
-    0 directories, 2 files
-
-Next add your secrets to the vault by using `vault:store`:
-
-    karaf@root()> vault:store -b block1 -a secret -x 'my very worst secret'
-    Value stored in vault to reference it use: VAULT::block1::secret::1
+This should have created `credential.store` file, a JCEKS KeyStore for storing the secrets.
 
 Exit the Karaf container by issuing `logout`:
 
     karaf@root()> logout
 
-Set the required environment variables presented when creating the vault, and run the Karaf again specifying the
-reference to your secret instead of the value:
+Set the required environment variables presented when creating the credential store:
 
-    $ export KEYSTORE_URL=.../apache-karaf-4.0.8/my-vault/vault.keystore
-    $ export SALT=Mxyzptlk
-    $ export ITERATION_COUNT=100
-    $ export KEYSTORE_PASSWORD=MASK-MfBSNdHBps/o9PcViobYMdruEtF1nlMJ
-    $ export KEYSTORE_ALIAS=vaultkey
-    $ export ENC_FILE_DIR=.../apache-karaf-4.0.8/my-vault
-    $ EXTRA_JAVA_OPTS="-Djavax.net.ssl.keyStorePassword=VAULT::block1::secret::1" bin/karaf
+    $ export CREDENTIAL_STORE_PROTECTION_ALGORITHM=masked-MD5-DES
+    $ export CREDENTIAL_STORE_PROTECTION_PARAMS=MDkEKXNvbWVhcmJpdHJhcnljcmF6eXN0cmluZ3RoYXRkb2Vzbm90bWF0dGVyAgID6AQIsUOEqvog6XI=
+    $ export CREDENTIAL_STORE_PROTECTION=Sf6sYy7gNpygs311zcQh8Q==
+    $ export CREDENTIAL_STORE_ATTR_location=credential.store
+
+Next add your secrets to the credential store by using `credential-store:store`:
+
+    karaf@root()> credential-store:store -a javax.net.ssl.keyStorePassword -s "don't panic"
+    Value stored in the credential store to reference it use: CS:javax.net.ssl.keyStorePassword
+
+Exit the Karaf container again by issuing `logout`:
+
+    karaf@root()> logout
+
+And run the Karaf again specifying the reference to your secret instead of the value:
+
+    $ EXTRA_JAVA_OPTS="-Djavax.net.ssl.keyStorePassword=CR:javax.net.ssl.keyStorePassword" bin/karaf
 
 And the value of `javax.net.ssl.keyStorePassword` when accessed using `System::getProperty` should contain the
-string `"my very worst secret"`.
+string `"don't panic"`.
 
 Security
 --------
 
 This is password masking, so if the environment variables are leaked outside of your environment or intended use along
-with the content of the vault directory, your secretes are compromised. The value of the property when accessed through
-JMX gets replaced with the string `"<sensitive>"`, but do note that there are many code paths that lead to 
+with the content of the credential store file, your secretes are compromised. The value of the property when accessed 
+through JMX gets replaced with the string `"<sensitive>"`, but do note that there are many code paths that lead to 
 `System::getProperty`, for instance diagnostics or monitoring tools might access it along with any 3rd party software
 for debugging purposes.
