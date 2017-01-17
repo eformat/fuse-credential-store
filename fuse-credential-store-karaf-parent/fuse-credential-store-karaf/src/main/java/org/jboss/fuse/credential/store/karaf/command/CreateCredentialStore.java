@@ -64,6 +64,7 @@ public final class CreateCredentialStore implements Action {
 
     @Option(name = "-t", aliases = {"--store-type"}, description = "Credential store implementation type (algorithm)",
             multiValued = false, valueToShowInHelp = Option.DEFAULT_STRING)
+    @Completion(caseSensitive = true, value = CredentialStoreAlgorithmCompletionSupport.class)
     String storeAlgorithm = Defaults.CREDENTIAL_STORE_ALGORITHM;
 
     @Option(name = "-a", aliases = {"--store-attributes"},
