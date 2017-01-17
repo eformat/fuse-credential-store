@@ -23,6 +23,9 @@ import org.jboss.fuse.credential.store.karaf.util.CredentialStoreHelper;
 import org.wildfly.security.credential.Credential;
 import org.wildfly.security.credential.store.CredentialStore;
 
+/**
+ * Removes a value from the Credential store configured by the environment variables.
+ */
 @Command(scope = "credential-store", name = "remove", description = "Remove secret from the credential store")
 @Service
 public class RemoveFromCredentialStore implements Action {

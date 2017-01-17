@@ -35,6 +35,9 @@ import org.wildfly.security.credential.store.impl.KeyStoreCredentialStore;
 
 import static org.jboss.fuse.credential.store.karaf.util.EnvironmentHelper.attributesFromEnvironment;
 
+/**
+ * Utility class with methods relating to {@link CredentialStore} usage.
+ */
 public final class CredentialStoreHelper {
 
     private static final String CREDENTIAL_STORE_ALGORITHM_ENV = "CREDENTIAL_STORE_ALGORITHM";

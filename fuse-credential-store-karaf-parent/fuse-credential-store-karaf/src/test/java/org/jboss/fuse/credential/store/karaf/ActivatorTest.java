@@ -16,6 +16,7 @@
 package org.jboss.fuse.credential.store.karaf;
 
 import java.io.File;
+import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,13 +48,19 @@ public class ActivatorTest {
 
     CredentialStore credentialStore;
 
+    @After
+    public void deregisterElytronProvider() {
+        Security.removeProvider(new WildFlyElytronProvider().getName());
+    }
+
     @Before
     public void initializeCredentialStore() throws Exception {
         activator.start(null);
 
-        final WildFlyElytronProvider provider = new WildFlyElytronProvider();
+        final WildFlyElytronProvider elytron = new WildFlyElytronProvider();
+        Security.addProvider(elytron);
 
-        final PasswordFactory passwordFactory = PasswordFactory.getInstance(ClearPassword.ALGORITHM_CLEAR, provider);
+        final PasswordFactory passwordFactory = PasswordFactory.getInstance(ClearPassword.ALGORITHM_CLEAR, elytron);
         final Password password = passwordFactory.generatePassword(
                 new ClearPasswordSpec("it was the best of times it was the worst of times".toCharArray()));
 
@@ -61,7 +68,7 @@ public class ActivatorTest {
 
         final CredentialSource credentialSource = IdentityCredentials.NONE.withCredential(credential);
 
-        credentialStore = CredentialStore.getInstance(KeyStoreCredentialStore.KEY_STORE_CREDENTIAL_STORE, provider);
+        credentialStore = CredentialStore.getInstance(KeyStoreCredentialStore.KEY_STORE_CREDENTIAL_STORE, elytron);
 
         final String storePath = new File(tmp.getRoot(), "credential.store").getAbsolutePath();
         final Map<String, String> parameters = new HashMap<>();

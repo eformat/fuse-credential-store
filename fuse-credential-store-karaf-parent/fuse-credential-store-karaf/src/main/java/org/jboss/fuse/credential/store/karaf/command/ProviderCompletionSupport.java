@@ -26,6 +26,9 @@ import org.apache.karaf.shell.api.console.Completer;
 import org.apache.karaf.shell.api.console.Session;
 import org.apache.karaf.shell.support.completers.StringsCompleter;
 
+/**
+ * A {@link Completer} that auto completes installed security providers.
+ */
 @Service
 public class ProviderCompletionSupport implements Completer {
 

@@ -26,6 +26,11 @@ import org.apache.karaf.shell.api.console.Session;
 import org.apache.karaf.shell.support.completers.StringsCompleter;
 import org.wildfly.security.credential.store.CredentialStore;
 
+/**
+ * A {@link Completer} that auto completes Credential store algorithms. Looks for all implementations of
+ * {@link CredentialStore} in the providers registered at {@link Security} and auto completes with the
+ * {@link Service#getAlgorithm()}.
+ */
 @org.apache.karaf.shell.api.action.lifecycle.Service
 public class CredentialStoreAlgorithmCompletionSupport implements Completer {
 

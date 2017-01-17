@@ -148,4 +148,16 @@ public class CredentialStoreProtectionCompletionSupportTest {
 
         assertThat(candidates).doesNotContain("provider=");
     }
+
+    @Test
+    public void shouldReturnOptionOf() {
+        assertThat(CredentialStoreProtectionCompletionSupport.optionOf(null)).isEmpty();
+        assertThat(CredentialStoreProtectionCompletionSupport.optionOf("")).isEmpty();
+        assertThat(CredentialStoreProtectionCompletionSupport.optionOf("=value")).isEmpty();
+        assertThat(CredentialStoreProtectionCompletionSupport.optionOf(" = value")).isEmpty();
+        assertThat(CredentialStoreProtectionCompletionSupport.optionOf("option=value")).isEqualTo("option");
+        assertThat(CredentialStoreProtectionCompletionSupport.optionOf("option=")).isEqualTo("option");
+        assertThat(CredentialStoreProtectionCompletionSupport.optionOf("option =")).isEqualTo("option");
+        assertThat(CredentialStoreProtectionCompletionSupport.optionOf(" option = value")).isEqualTo("option");
+    }
 }

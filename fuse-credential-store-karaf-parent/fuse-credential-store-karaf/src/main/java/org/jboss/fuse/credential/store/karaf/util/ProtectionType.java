@@ -21,10 +21,16 @@ import java.util.Map;
 
 import org.wildfly.security.credential.source.CredentialSource;
 
+/**
+ * All supported protection types that are used to protect the Credential store.
+ */
 public enum ProtectionType {
 
     masked(new MaskedPasswordHelper());
 
+    /**
+     * Contract a specific supported protectiont type must implement.
+     */
     interface CredentialSourceHandler {
         String CREDENTIAL_STORE_PROTECTION = "CREDENTIAL_STORE_PROTECTION";
 

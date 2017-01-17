@@ -42,6 +42,9 @@ import org.wildfly.security.credential.store.CredentialStore;
 
 import static org.jboss.fuse.credential.store.karaf.util.OptionsHelper.attributesFromOptions;
 
+/**
+ * An Apache Karaf shell command to create a Credential store.
+ */
 @Command(scope = "credential-store", name = "create", description = "Create credential store")
 @Service
 public final class CreateCredentialStore implements Action {
@@ -71,6 +74,20 @@ public final class CreateCredentialStore implements Action {
             description = "Credential store attributes, used to configure the credential store", multiValued = true)
     List<String> storeAttributes = Collections.emptyList();
 
+    /**
+     * Delegates to {@link ProtectionType} to create parameters needed to configure {@link CredentialSource} thats in
+     * turn for the protection of the {@link CredentialStore}. Used by the command line to present to the user
+     * configuration needed to setup the Credential Store.
+     *
+     * @param type
+     *            type of protection
+     * @param parameters
+     *            parameters given by the user
+     * @return parameters needed to configure the CredentialSource
+     * @throws CommandException
+     * @throws GeneralSecurityException
+     * @throws IOException
+     */
     static Map<String, String> createCredentialSourceConfiguration(final ProtectionType type,
             final List<String> parameters) throws CommandException, GeneralSecurityException, IOException {
         final Map<String, String> attributes = OptionsHelper.attributesFromOptions(parameters);
@@ -78,6 +95,23 @@ public final class CreateCredentialStore implements Action {
         return type.createConfiguration(attributes);
     }
 
+    /**
+     * Performs the {@link CredentialStore} creation, by the way of instantiation, initialization and in the end
+     * flushing the Credential store implementation. The given attributes are combined with the default attributes so
+     * that the user doesn't need to specify a lot of parameters needed for the initialization of the Credential source.
+     *
+     * @see CredentialStoreHelper#defaultCredentialStoreAttributesFor(String)
+     *
+     * @param algorithm
+     *            of the Credential store, must be one supported by the provider
+     * @param givenAttributes
+     *            configuration parameters that will be combined with default to initialize the Credential store
+     * @param credentialSource
+     *            the protection of the Credential store
+     * @param provider
+     *            provider whose implementation will be used for the Credential store
+     * @throws GeneralSecurityException
+     */
     static void createCredentialStore(final String algorithm, final Map<String, String> givenAttributes,
             final CredentialSource credentialSource, final Provider provider) throws GeneralSecurityException {
         final CredentialStore credentialStore = CredentialStore.getInstance(algorithm, provider);
@@ -93,6 +127,9 @@ public final class CreateCredentialStore implements Action {
         credentialStore.flush();
     }
 
+    /**
+     * Performs the creation of Credential store according to the given command line options.
+     */
     @Override
     public Object execute() throws Exception {
         final Map<String, String> attributes = attributesFromOptions(storeAttributes);
@@ -129,6 +166,18 @@ public final class CreateCredentialStore implements Action {
         return null;
     }
 
+    /**
+     * Adds the given configuration key-values to the displayed {@link ShellTable} and to the given
+     * {@link StringBuilder}. The table will contain the raw values, and the string will contain formated commands for
+     * setting the environment variables.
+     *
+     * @param configuration
+     *            key-value environment variables to append
+     * @param table
+     *            table to append to
+     * @param buffy
+     *            string to append to
+     */
     private void appendConfigurationTo(final Map<String, String> configuration, final ShellTable table,
             final StringBuilder buffy) {
         for (final Entry<String, String> entry : configuration.entrySet()) {

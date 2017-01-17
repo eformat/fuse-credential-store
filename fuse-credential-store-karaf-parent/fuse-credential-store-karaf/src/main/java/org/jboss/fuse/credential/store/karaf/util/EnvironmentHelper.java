@@ -20,6 +20,9 @@ import java.util.Map;
 
 import static java.lang.System.getenv;
 
+/**
+ * Utility class with methods to access environment variables.
+ */
 final class EnvironmentHelper {
 
     private EnvironmentHelper() {

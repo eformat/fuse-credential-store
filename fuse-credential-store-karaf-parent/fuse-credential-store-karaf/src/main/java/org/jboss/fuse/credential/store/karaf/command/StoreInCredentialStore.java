@@ -27,6 +27,9 @@ import org.wildfly.security.password.Password;
 import org.wildfly.security.password.PasswordFactory;
 import org.wildfly.security.password.spec.ClearPasswordSpec;
 
+/**
+ * Places a secret value in the Credential store under the specified alias configured by the environment variables.
+ */
 @Command(scope = "credential-store", name = "store", description = "Store secret in the credential store")
 @Service
 public class StoreInCredentialStore implements Action {

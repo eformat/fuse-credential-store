@@ -21,12 +21,24 @@ import java.util.Map;
 
 import org.apache.karaf.shell.support.CommandException;
 
+/**
+ * Utility class for parsing options given on the Karaf shell command line.
+ */
 public final class OptionsHelper {
 
     private OptionsHelper() {
         // utility class
     }
 
+    /**
+     * Parses all options given as a list of option-value pairs, in {@code option=value} syntax to a {@link Map}.
+     *
+     * @param options
+     *            list of option-value pairs
+     * @return map of parsed option-values
+     * @throws CommandException
+     *             if the specified option is not in the proper syntax
+     */
     public static Map<String, String> attributesFromOptions(final List<String> options) throws CommandException {
         final Map<String, String> ret = new HashMap<>();
 

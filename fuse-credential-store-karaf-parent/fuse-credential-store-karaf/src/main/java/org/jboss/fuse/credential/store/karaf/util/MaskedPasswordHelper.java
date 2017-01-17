@@ -46,6 +46,9 @@ import org.wildfly.security.password.spec.IteratedSaltedPasswordAlgorithmSpec;
 import org.wildfly.security.password.spec.MaskedPasswordAlgorithmSpec;
 import org.wildfly.security.password.spec.MaskedPasswordSpec;
 
+/**
+ * {@link CredentialSourceHandler} implementation for masked password Credential store protection.
+ */
 final class MaskedPasswordHelper implements CredentialSourceHandler {
 
     private static final String DEFAULT_ALGORITHM = MaskedPassword.ALGORITHM_MASKED_HMAC_SHA512_AES_256;

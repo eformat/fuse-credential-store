@@ -23,6 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.wildfly.security.WildFlyElytronProvider;
 
+/**
+ * Utility class that deals with {@link Security} {@link Provider}s.
+ */
 public final class ProviderHelper {
 
     public static final String WILDFLY_PROVIDER = WildFlyElytronProvider.class.getName();

@@ -26,24 +26,53 @@ import org.apache.karaf.shell.api.console.Completer;
 import org.apache.karaf.shell.api.console.Session;
 import org.apache.karaf.shell.support.completers.StringsCompleter;
 import org.jboss.fuse.credential.store.karaf.util.ProtectionType;
+import org.wildfly.security.credential.source.CredentialSource;
+import org.wildfly.security.credential.store.CredentialStore;
 
+/**
+ * A {@link Completer} that auto completes parameters for {@link CredentialSource} that is used to protect the
+ * {@link CredentialStore}. Requires that the type of protection ({@code -p} or {@code --protection-type} is specified
+ * beforehand, as the parameters required by each {@link ProtectionType} might be different.
+ */
 @Service
 public class CredentialStoreProtectionCompletionSupport implements Completer {
 
-    private static String optionOf(final String value) {
-        if (value == null) {
+    /**
+     * Returns the option part of the {@code option=value} pair.
+     *
+     * @param argument
+     *            the whole argument, possibly in option=value syntax
+     * @return just the option part, never null
+     */
+    static String optionOf(final String argument) {
+        if (argument == null) {
             return "";
         }
 
-        final int optionValueSeparatorIdx = value.indexOf('=');
+        final String argumentTrimmed = argument.trim();
 
-        if ((optionValueSeparatorIdx > 0) && (optionValueSeparatorIdx < value.length())) {
-            return value.substring(0, optionValueSeparatorIdx);
+        final int optionValueSeparatorIdx = argumentTrimmed.indexOf('=');
+
+        if (optionValueSeparatorIdx == 0) {
+            return "";
         }
 
-        return value;
+        if ((optionValueSeparatorIdx > 0) && (optionValueSeparatorIdx < argumentTrimmed.length())) {
+            return argumentTrimmed.substring(0, optionValueSeparatorIdx).trim();
+        }
+
+        return argumentTrimmed;
     }
 
+    /**
+     * Returns all option values from the supplied arguments. Given an array of string arguments given by the user on
+     * the command line, this method selects all {@code -k} or {@code --protection-attributes} argument values and
+     * returns only the option from the {@code option=value} pair.
+     *
+     * @param arguments
+     *            array of arguments from the command line
+     * @return all protection options used
+     */
     static Set<String> usedOptions(final String... arguments) {
         final Set<String> ret = new HashSet<>();
 
@@ -52,7 +81,9 @@ public class CredentialStoreProtectionCompletionSupport implements Completer {
 
             final boolean isProtectionAttributeOption = "-k".equals(argument)
                 || "--protection-attributes".equals(argument);
+
             final boolean hasMoreArguments = arguments.length > (i + 1);
+
             if (isProtectionAttributeOption && hasMoreArguments && !arguments[i + 1].startsWith("-")) {
                 ret.add(optionOf(arguments[i + 1]));
             }
@@ -61,6 +92,18 @@ public class CredentialStoreProtectionCompletionSupport implements Completer {
         return ret;
     }
 
+    /**
+     * Performs completion for any {@code -k} or {@code --protection-attributes} parameters firstly by suggesting an
+     * option part, then providing completion for values for a specific option.
+     *
+     * @param session
+     *            the current {@link Session}
+     * @param commandLine
+     *            the pre-parsed {@link CommandLine}
+     * @param candidates
+     *            a list to fill with possible completion candidates
+     * @return the index of the{@link CommandLine} for which the completion will be relative
+     */
     @Override
     public int complete(final Session session, final CommandLine commandLine, final List<String> candidates) {
         final String[] arguments = commandLine.getArguments();
@@ -74,10 +117,12 @@ public class CredentialStoreProtectionCompletionSupport implements Completer {
             }
         }
 
+        // do we have protection type specified
         if ((protectionTypeIdx < 0) || (arguments.length <= (protectionTypeIdx + 1))) {
             return -1;
         }
 
+        // parse the protection type argument
         final String protectionTypeString = arguments[protectionTypeIdx + 1];
         final ProtectionType protectionType;
         try {
@@ -86,24 +131,30 @@ public class CredentialStoreProtectionCompletionSupport implements Completer {
             return -1;
         }
 
+        // these are supported options for the specified protection type, we sort them for binarySearch below
         final String[] supportedOptions = Arrays.stream(protectionType.getSupportedOptions()).sorted()
                 .toArray(String[]::new);
 
+        // the user may have already chosen an option ("option=") part
         final String option = optionOf(commandLine.getCursorArgument());
 
-        final Set<String> usedOptions = usedOptions(arguments);
-
-        if (Arrays.binarySearch(supportedOptions, option) >= 0) {
+        if (!option.isEmpty() && (Arrays.binarySearch(supportedOptions, option) >= 0)) {
+            // if the user has chosen the option part, provide completion on the value part
             final String[] options = Arrays.stream(protectionType.getOptionValuesFor(option)).map(o -> option + "=" + o)
                     .toArray(String[]::new);
 
             return new StringsCompleter(options).complete(session, commandLine, candidates);
         }
 
+        final Set<String> usedOptions = usedOptions(arguments);
+
+        // use supported options without any used options
         final int complete = new StringsCompleter(Arrays.stream(supportedOptions).filter(o -> !usedOptions.contains(o))
                 .map(o -> o + "=").toArray(String[]::new)).complete(session, commandLine, candidates);
 
         if ((complete > 0) && (candidates.size() == 1)) {
+            // the StringCompleter adds a space character if there is only one option, we remove it to have the cursor
+            // right after '=' sign
             final String singleOption = candidates.get(0);
 
             candidates.set(0, singleOption.substring(0, singleOption.length() - 1));

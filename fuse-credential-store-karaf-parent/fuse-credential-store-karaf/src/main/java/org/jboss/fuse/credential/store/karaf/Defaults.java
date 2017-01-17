@@ -19,6 +19,9 @@ import org.jboss.fuse.credential.store.karaf.util.ProtectionType;
 import org.jboss.fuse.credential.store.karaf.util.ProviderHelper;
 import org.wildfly.security.credential.store.impl.KeyStoreCredentialStore;
 
+/**
+ * Default values taken if not specified otherwise.
+ */
 public final class Defaults {
 
     public static final String CREDENTIAL_STORE_ALGORITHM = KeyStoreCredentialStore.KEY_STORE_CREDENTIAL_STORE;
