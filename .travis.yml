@@ -1,9 +1,6 @@
 language: java
 jdk: openjdk8
 dist: trusty
-script:
-  - ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -q -B -V
-  - ./mvnw test -q -B -V
 cache:
   directories:
     - $HOME/.m2
