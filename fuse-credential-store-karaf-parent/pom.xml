@@ -23,10 +23,12 @@
   <artifactId>fuse-credential-store-karaf-parent</artifactId>
   <packaging>pom</packaging>
 
+  <name>Fuse Credential Store - Karaf parent</name>
+  <description>Parent POM for Fuse Credential Store support for Apache Karaf</description>
+
   <modules>
     <module>fuse-credential-store-karaf</module>
     <module>fuse-credential-store-karaf-itests</module>
   </modules>
 
-  <name>Fuse Credential Store for Karaf</name>
 </project>

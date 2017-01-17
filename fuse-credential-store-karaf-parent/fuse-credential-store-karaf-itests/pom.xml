@@ -20,6 +20,9 @@
   </parent>
   <artifactId>fuse-credential-store-karaf-itests</artifactId>
 
+  <name>Fuse Credential Store - Karaf integration tests</name>
+  <description>Integration tests for Fuse Credential Store support for Apache Karaf</description>
+
   <properties>
     <pax-exam.version>4.10.0-SNAPSHOT</pax-exam.version>
     <pax-url.version>2.5.2</pax-url.version>

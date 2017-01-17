@@ -21,6 +21,9 @@
   <artifactId>fuse-credential-store-karaf</artifactId>
   <packaging>bundle</packaging>
 
+  <name>Fuse Credential Store - Karaf support</name>
+  <description>OSGI Bundle containing support for WildFly Elytron Credential Store for Apache Karaf</description>
+
   <properties>
     <elytron.version>1.1.0.Beta20-SNAPSHOT</elytron.version>
   </properties>
