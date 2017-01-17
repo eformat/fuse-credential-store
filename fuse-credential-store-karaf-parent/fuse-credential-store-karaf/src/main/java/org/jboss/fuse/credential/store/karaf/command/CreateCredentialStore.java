@@ -59,6 +59,7 @@ public final class CreateCredentialStore implements Action {
     @Option(name = "--provider",
             description = "Credential store provider, eight fully qualified class name of the provider or the provider name if the provider is registered with security runtime",
             multiValued = false, valueToShowInHelp = Option.DEFAULT_STRING)
+    @Completion(caseSensitive = true, value = ProviderCompletionSupport.class)
     String provider = Defaults.PROVIDER;
 
     @Option(name = "-t", aliases = {"--store-type"}, description = "Credential store implementation type (algorithm)",
